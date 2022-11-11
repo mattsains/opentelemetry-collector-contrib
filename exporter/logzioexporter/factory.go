@@ -45,21 +45,21 @@ func NewFactory() component.ExporterFactory {
 }
 
 func createDefaultConfig() component.ExporterConfig {
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Timeout = 30 * time.Second
+	// Default to gzip compression
+	httpConfig.Compression = configcompression.Gzip
+	// We almost read 0 bytes, so no need to tune ReadBufferSize.
+	// TODO: but the default write buffer size is 4k, not 5k
+	httpConfig.WriteBufferSize = 512 * 1024
+
 	return &Config{
-		Region:           "",
-		Token:            "",
-		ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-		RetrySettings:    exporterhelper.NewDefaultRetrySettings(),
-		QueueSettings:    exporterhelper.NewDefaultQueueSettings(),
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: "",
-			Timeout:  30 * time.Second,
-			Headers:  map[string]string{},
-			// Default to gzip compression
-			Compression: configcompression.Gzip,
-			// We almost read 0 bytes, so no need to tune ReadBufferSize.
-			WriteBufferSize: 512 * 1024,
-		},
+		Region:             "",
+		Token:              "",
+		ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+		RetrySettings:      exporterhelper.NewDefaultRetrySettings(),
+		QueueSettings:      exporterhelper.NewDefaultQueueSettings(),
+		HTTPClientSettings: httpConfig,
 	}
 }
 

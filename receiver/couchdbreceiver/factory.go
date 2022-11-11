@@ -42,17 +42,18 @@ func NewFactory() component.ReceiverFactory {
 }
 
 func createDefaultConfig() component.ReceiverConfig {
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.TLSSetting = configtls.TLSClientSetting{}
+	httpConfig.Endpoint = defaultEndpoint
+	httpConfig.Timeout = 1 * time.Minute
+
 	return &Config{
 		Metrics: metadata.DefaultMetricsSettings(),
 		ScraperControllerSettings: scraperhelper.ScraperControllerSettings{
 			ReceiverSettings:   config.NewReceiverSettings(component.NewID(typeStr)),
 			CollectionInterval: 1 * time.Minute,
 		},
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			TLSSetting: configtls.TLSClientSetting{},
-			Endpoint:   defaultEndpoint,
-			Timeout:    1 * time.Minute,
-		},
+		HTTPClientSettings: httpConfig,
 	}
 }
 

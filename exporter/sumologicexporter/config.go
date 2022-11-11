@@ -74,9 +74,9 @@ type Config struct {
 
 // CreateDefaultHTTPClientSettings returns default http client settings
 func CreateDefaultHTTPClientSettings() confighttp.HTTPClientSettings {
-	return confighttp.HTTPClientSettings{
-		Timeout: defaultTimeout,
-	}
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Timeout = defaultTimeout
+	return httpConfig
 }
 
 // LogFormatType represents log_format

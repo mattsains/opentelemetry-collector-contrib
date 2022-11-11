@@ -91,9 +91,8 @@ type ecsInfoOption func(*EcsInfo)
 
 // New creates a k8sApiServer which can generate cluster-level metrics
 func NewECSInfo(refreshInterval time.Duration, hostIPProvider hostIPProvider, host component.Host, settings component.TelemetrySettings, options ...ecsInfoOption) (*EcsInfo, error) {
-	setting := confighttp.HTTPClientSettings{
-		Timeout: defaultTimeout,
-	}
+	setting := confighttp.NewDefaultHTTPClientSettings()
+	setting.Timeout = defaultTimeout
 
 	client, err := setting.ToClient(host, settings)
 

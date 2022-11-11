@@ -53,7 +53,7 @@ func createDefaultConfig() component.ExporterConfig {
 		},
 
 		APIToken:           "",
-		HTTPClientSettings: confighttp.HTTPClientSettings{Endpoint: ""},
+		HTTPClientSettings: confighttp.NewDefaultHTTPClientSettings(),
 
 		Tags:              []string{},
 		DefaultDimensions: make(map[string]string),

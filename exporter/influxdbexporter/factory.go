@@ -87,16 +87,17 @@ func createLogsExporter(ctx context.Context, set component.ExporterCreateSetting
 }
 
 func createDefaultConfig() component.ExporterConfig {
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Timeout = 5 * time.Second
+	httpConfig.Headers = map[string]string{
+		"User-Agent": "OpenTelemetry -> Influx",
+	}
+
 	return &Config{
-		ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Timeout: 5 * time.Second,
-			Headers: map[string]string{
-				"User-Agent": "OpenTelemetry -> Influx",
-			},
-		},
-		QueueSettings: exporterhelper.NewDefaultQueueSettings(),
-		RetrySettings: exporterhelper.NewDefaultRetrySettings(),
-		MetricsSchema: "telegraf-prometheus-v1",
+		ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+		HTTPClientSettings: httpConfig,
+		QueueSettings:      exporterhelper.NewDefaultQueueSettings(),
+		RetrySettings:      exporterhelper.NewDefaultRetrySettings(),
+		MetricsSchema:      "telegraf-prometheus-v1",
 	}
 }

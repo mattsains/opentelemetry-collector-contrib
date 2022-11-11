@@ -47,15 +47,16 @@ func NewFactory() component.ExporterFactory {
 }
 
 func createDefaultConfig() component.ExporterConfig {
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Timeout = defaultTimeout
+	// We almost read 0 bytes, so no need to tune ReadBufferSize.
+	httpConfig.WriteBufferSize = 512 * 1024
+
 	return &Config{
-		ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-		RetrySettings:    exporterhelper.NewDefaultRetrySettings(),
-		QueueSettings:    exporterhelper.NewDefaultQueueSettings(),
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Timeout: defaultTimeout,
-			// We almost read 0 bytes, so no need to tune ReadBufferSize.
-			WriteBufferSize: 512 * 1024,
-		},
+		ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+		RetrySettings:      exporterhelper.NewDefaultRetrySettings(),
+		QueueSettings:      exporterhelper.NewDefaultQueueSettings(),
+		HTTPClientSettings: httpConfig,
 		Format:             defaultFormat,
 		DefaultServiceName: defaultServiceName,
 	}

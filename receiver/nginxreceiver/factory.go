@@ -41,16 +41,17 @@ func NewFactory() component.ReceiverFactory {
 }
 
 func createDefaultConfig() component.ReceiverConfig {
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Endpoint = "http://localhost:80/status"
+	httpConfig.Timeout = 10 * time.Second
+
 	return &Config{
 		ScraperControllerSettings: scraperhelper.ScraperControllerSettings{
 			ReceiverSettings:   config.NewReceiverSettings(component.NewID(typeStr)),
 			CollectionInterval: 10 * time.Second,
 		},
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: "http://localhost:80/status",
-			Timeout:  10 * time.Second,
-		},
-		Metrics: metadata.DefaultMetricsSettings(),
+		HTTPClientSettings: httpConfig,
+		Metrics:            metadata.DefaultMetricsSettings(),
 	}
 }
 

@@ -49,9 +49,7 @@ func createDefaultConfig() component.ExporterConfig {
 		QueueSettings: exporterhelper.NewDefaultQueueSettings(),
 		RetrySettings: exporterhelper.NewDefaultRetrySettings(),
 
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Headers: map[string]string{},
-		},
+		HTTPClientSettings: confighttp.NewDefaultHTTPClientSettings(),
 
 		// Settings specific to the Humio exporter
 		DisableCompression: false,

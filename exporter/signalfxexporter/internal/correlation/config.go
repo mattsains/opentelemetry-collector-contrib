@@ -26,8 +26,11 @@ import (
 
 // DefaultConfig returns default configuration correlation values.
 func DefaultConfig() *Config {
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Timeout = 5 * time.Second
+
 	return &Config{
-		HTTPClientSettings:  confighttp.HTTPClientSettings{Timeout: 5 * time.Second},
+		HTTPClientSettings:  httpConfig,
 		StaleServiceTimeout: 5 * time.Minute,
 		SyncAttributes: map[string]string{
 			conventions.AttributeK8SPodUID:   conventions.AttributeK8SPodUID,

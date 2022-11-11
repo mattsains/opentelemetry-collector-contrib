@@ -41,14 +41,15 @@ func NewFactory() component.ExtensionFactory {
 }
 
 func createDefaultConfig() component.ExtensionConfig {
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Timeout = 10 * time.Second
+
 	return &Config{
 		ExtensionSettings: config.NewExtensionSettings(component.NewID(typeStr)),
 		Ingress: confighttp.HTTPServerSettings{
 			Endpoint: defaultEndpoint,
 		},
-		Egress: confighttp.HTTPClientSettings{
-			Timeout: 10 * time.Second,
-		},
+		Egress: httpConfig,
 	}
 }
 

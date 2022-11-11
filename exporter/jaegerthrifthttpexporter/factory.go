@@ -41,11 +41,11 @@ func NewFactory() component.ExporterFactory {
 }
 
 func createDefaultConfig() component.ExporterConfig {
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Timeout = exporterhelper.NewDefaultTimeoutSettings().Timeout
 	return &Config{
-		ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Timeout: exporterhelper.NewDefaultTimeoutSettings().Timeout,
-		},
+		ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+		HTTPClientSettings: httpConfig,
 	}
 }
 

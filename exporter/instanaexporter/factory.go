@@ -43,14 +43,13 @@ func NewFactory() component.ExporterFactory {
 
 // createDefaultConfig creates the default exporter configuration
 func createDefaultConfig() component.ExporterConfig {
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Timeout = 30 * time.Second
+	httpConfig.WriteBufferSize = 512 * 1024
+
 	return &Config{
-		ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint:        "",
-			Timeout:         30 * time.Second,
-			Headers:         map[string]string{},
-			WriteBufferSize: 512 * 1024,
-		},
+		ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+		HTTPClientSettings: httpConfig,
 	}
 }
 

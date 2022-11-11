@@ -47,14 +47,15 @@ func NewFactory() component.ReceiverFactory {
 }
 
 func createDefaultConfig() component.ReceiverConfig {
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Endpoint = defaultEndpoint
+	httpConfig.TLSSetting = configtls.TLSClientSetting{
+		Insecure: true,
+	}
+
 	return &Config{
-		ReceiverSettings: config.NewReceiverSettings(component.NewID(typeStr)),
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: defaultEndpoint,
-			TLSSetting: configtls.TLSClientSetting{
-				Insecure: true,
-			},
-		},
+		ReceiverSettings:   config.NewReceiverSettings(component.NewID(typeStr)),
+		HTTPClientSettings: httpConfig,
 		MetricsPath:        defaultMetricsPath,
 		CollectionInterval: defaultCollectionInterval,
 	}

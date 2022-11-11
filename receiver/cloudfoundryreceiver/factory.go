@@ -43,16 +43,17 @@ func NewFactory() component.ReceiverFactory {
 }
 
 func createDefaultConfig() component.ReceiverConfig {
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Endpoint = defaultURL
+	httpConfig.TLSSetting = configtls.TLSClientSetting{
+		InsecureSkipVerify: false,
+	}
+
 	return &Config{
 		ReceiverSettings: config.NewReceiverSettings(component.NewID(typeStr)),
 		RLPGateway: RLPGatewayConfig{
-			HTTPClientSettings: confighttp.HTTPClientSettings{
-				Endpoint: defaultURL,
-				TLSSetting: configtls.TLSClientSetting{
-					InsecureSkipVerify: false,
-				},
-			},
-			ShardID: defaultRLPGatewayShardID,
+			HTTPClientSettings: httpConfig,
+			ShardID:            defaultRLPGatewayShardID,
 		},
 		UAA: UAAConfig{
 			LimitedHTTPClientSettings: LimitedHTTPClientSettings{

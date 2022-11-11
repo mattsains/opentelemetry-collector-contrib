@@ -83,6 +83,11 @@ func createMetricsExporter(ctx context.Context, set component.ExporterCreateSett
 }
 
 func createDefaultConfig() component.ExporterConfig {
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Endpoint = "http://some.url:9411/api/prom/push"
+	httpConfig.WriteBufferSize = 512 * 1024
+	httpConfig.Timeout = exporterhelper.NewDefaultTimeoutSettings().Timeout
+
 	return &Config{
 		ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
 		Namespace:        "",
@@ -94,14 +99,7 @@ func createDefaultConfig() component.ExporterConfig {
 			MaxInterval:     200 * time.Millisecond,
 			MaxElapsedTime:  1 * time.Minute,
 		},
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: "http://some.url:9411/api/prom/push",
-			// We almost read 0 bytes, so no need to tune ReadBufferSize.
-			ReadBufferSize:  0,
-			WriteBufferSize: 512 * 1024,
-			Timeout:         exporterhelper.NewDefaultTimeoutSettings().Timeout,
-			Headers:         map[string]string{},
-		},
+		HTTPClientSettings: httpConfig,
 		// TODO(jbd): Adjust the default queue size.
 		RemoteWriteQueue: RemoteWriteQueue{
 			Enabled:      true,
