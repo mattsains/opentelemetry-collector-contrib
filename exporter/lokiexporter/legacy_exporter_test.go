@@ -69,12 +69,16 @@ func appendTestLogData(dest plog.Logs, numberOfLogs int, attributes map[string]i
 	}
 }
 
+func newHTTPClientSettings() config.HTTPClientSettings {
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Endpoint = validEndpoint
+	return httpConfig
+}
+
 func TestExporter_new(t *testing.T) {
 	t.Run("with valid config", func(t *testing.T) {
 		config := &Config{
-			HTTPClientSettings: confighttp.HTTPClientSettings{
-				Endpoint: validEndpoint,
-			},
+			HTTPClientSettings: newHTTPClientSettings(),
 			Labels: &LabelsConfig{
 				Attributes:         testValidAttributesWithMapping,
 				ResourceAttributes: testValidResourceWithMapping,
@@ -114,14 +118,14 @@ func TestExporter_pushLogData(t *testing.T) {
 		return logs
 	}
 
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Headers = map[string]string{
+		"X-Custom-Header": "some_value",
+	}
+
 	genericConfig := &Config{
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: "",
-			Headers: map[string]string{
-				"X-Custom-Header": "some_value",
-			},
-		},
-		TenantID: &tenantTest,
+		HTTPClientSettings: httpConfig,
+		TenantID:           &tenantTest,
 		Labels: &LabelsConfig{
 			Attributes: map[string]string{
 				conventions.AttributeContainerName:  "container_name",
@@ -346,9 +350,7 @@ func TestTenantSource(t *testing.T) {
 
 func TestExporter_logDataToLoki(t *testing.T) {
 	config := &Config{
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: validEndpoint,
-		},
+		HTTPClientSettings: newHTTPClientSettings(),
 		Labels: &LabelsConfig{
 			Attributes: map[string]string{
 				conventions.AttributeContainerName:  "container_name",
@@ -488,9 +490,7 @@ func TestExporter_logDataToLoki(t *testing.T) {
 
 func TestExporter_convertAttributesToLabels(t *testing.T) {
 	config := &Config{
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: validEndpoint,
-		},
+		HTTPClientSettings: newHTTPClientSettings(),
 		Labels: &LabelsConfig{
 			Attributes: map[string]string{
 				conventions.AttributeContainerName:  "container_name",
@@ -640,9 +640,7 @@ func TestExporter_encode(t *testing.T) {
 
 func TestExporter_startReturnsNillWhenValidConfig(t *testing.T) {
 	config := &Config{
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: validEndpoint,
-		},
+		HTTPClientSettings: newHTTPClientSettings(),
 		Labels: &LabelsConfig{
 			Attributes:         testValidAttributesWithMapping,
 			ResourceAttributes: testValidResourceWithMapping,
@@ -654,13 +652,13 @@ func TestExporter_startReturnsNillWhenValidConfig(t *testing.T) {
 }
 
 func TestExporter_startReturnsErrorWhenInvalidHttpClientSettings(t *testing.T) {
+	erroringHTTPConfig := confighttp.NewDefaultHTTPClientSettings()
+	erroringHTTPConfig.CustomRoundTripper = func(next http.RoundTripper) (http.RoundTripper, error) {
+		return nil, fmt.Errorf("this causes HTTPClientSettings.ToClient() to error")
+	}
+
 	config := &Config{
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: "",
-			CustomRoundTripper: func(next http.RoundTripper) (http.RoundTripper, error) {
-				return nil, fmt.Errorf("this causes HTTPClientSettings.ToClient() to error")
-			},
-		},
+		HTTPClientSettings: erroringHTTPConfig,
 	}
 	exp := newLegacyExporter(config, componenttest.NewNopTelemetrySettings())
 	require.NotNil(t, exp)
@@ -669,9 +667,7 @@ func TestExporter_startReturnsErrorWhenInvalidHttpClientSettings(t *testing.T) {
 
 func TestExporter_stopAlwaysReturnsNil(t *testing.T) {
 	config := &Config{
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: validEndpoint,
-		},
+		HTTPClientSettings: newHTTPClientSettings(),
 		Labels: &LabelsConfig{
 			Attributes:         testValidAttributesWithMapping,
 			ResourceAttributes: testValidResourceWithMapping,

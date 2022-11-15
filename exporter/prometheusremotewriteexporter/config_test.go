@@ -37,6 +37,22 @@ func TestLoadConfig(t *testing.T) {
 	cm, err := confmaptest.LoadConf(filepath.Join("testdata", "config.yaml"))
 	require.NoError(t, err)
 
+	expectedHTTPConfig := confighttp.NewDefaultHTTPClientSettings()
+	expectedHTTPConfig.Endpoint = "localhost:8888"
+	expectedHTTPConfig.TLSSetting = configtls.TLSClientSetting{
+		TLSSetting: configtls.TLSSetting{
+			CAFile: "/var/lib/mycert.pem", // This is subject to change, but currently I have no idea what else to put here lol
+		},
+		Insecure: false,
+	}
+	expectedHTTPConfig.ReadBufferSize = 0
+	expectedHTTPConfig.WriteBufferSize = 512 * 1024
+	expectedHTTPConfig.Timeout = 5 * time.Second
+	expectedHTTPConfig.Headers = map[string]string{
+		"Prometheus-Remote-Write-Version": "0.1.0",
+		"X-Scope-OrgID":                   "234",
+	}
+
 	tests := []struct {
 		id           component.ID
 		expected     component.ExporterConfig
@@ -62,23 +78,9 @@ func TestLoadConfig(t *testing.T) {
 					QueueSize:    2000,
 					NumConsumers: 10,
 				},
-				Namespace:      "test-space",
-				ExternalLabels: map[string]string{"key1": "value1", "key2": "value2"},
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "localhost:8888",
-					TLSSetting: configtls.TLSClientSetting{
-						TLSSetting: configtls.TLSSetting{
-							CAFile: "/var/lib/mycert.pem", // This is subject to change, but currently I have no idea what else to put here lol
-						},
-						Insecure: false,
-					},
-					ReadBufferSize:  0,
-					WriteBufferSize: 512 * 1024,
-					Timeout:         5 * time.Second,
-					Headers: map[string]string{
-						"Prometheus-Remote-Write-Version": "0.1.0",
-						"X-Scope-OrgID":                   "234"},
-				},
+				Namespace:                   "test-space",
+				ExternalLabels:              map[string]string{"key1": "value1", "key2": "value2"},
+				HTTPClientSettings:          expectedHTTPConfig,
 				ResourceToTelemetrySettings: resourcetotelemetry.Settings{Enabled: true},
 				TargetInfo: &TargetInfo{
 					Enabled: true,

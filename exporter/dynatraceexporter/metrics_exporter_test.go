@@ -662,7 +662,7 @@ func Test_exporter_start_InvalidHTTPClientSettings(t *testing.T) {
 		},
 	}
 	cfg := &config.Config{
-		HTTPClientSettings: httpConfig
+		HTTPClientSettings: httpConfig,
 	}
 
 	exp := newMetricsExporter(componenttest.NewNopExporterCreateSettings(), cfg)

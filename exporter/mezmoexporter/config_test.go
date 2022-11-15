@@ -38,6 +38,9 @@ func TestLoadConfig(t *testing.T) {
 	defaultCfg.IngestURL = defaultIngestURL
 	defaultCfg.IngestKey = "00000000000000000000000000000000"
 
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Timeout = 5 * time.Second
+
 	tests := []struct {
 		id       component.ID
 		expected component.ExporterConfig
@@ -49,10 +52,8 @@ func TestLoadConfig(t *testing.T) {
 		{
 			id: component.NewIDWithName(typeStr, "allsettings"),
 			expected: &Config{
-				ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Timeout: 5 * time.Second,
-				},
+				ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+				HTTPClientSettings: httpConfig,
 				RetrySettings: exporterhelper.RetrySettings{
 					Enabled:         false,
 					InitialInterval: 99 * time.Second,

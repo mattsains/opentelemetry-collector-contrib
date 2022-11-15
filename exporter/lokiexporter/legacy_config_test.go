@@ -37,6 +37,37 @@ func TestLoadConfig(t *testing.T) {
 	cm, err := confmaptest.LoadConf(filepath.Join("testdata", "config_legacy.yaml"))
 	require.NoError(t, err)
 
+	expectedAllSettingsHTTPConfig := confighttp.NewDefaultHTTPClientSettings()
+	expectedAllSettingsHTTPConfig.Headers = map[string]string{
+		"X-Custom-Header": "loki_rocks",
+	}
+	expectedAllSettingsHTTPConfig.Endpoint = "https://loki:3100/loki/api/v1/push"
+	expectedAllSettingsHTTPConfig.TLSSetting = configtls.TLSClientSetting{
+		TLSSetting: configtls.TLSSetting{
+			CAFile:   "/var/lib/mycert.pem",
+			CertFile: "certfile",
+			KeyFile:  "keyfile",
+		},
+		Insecure: true,
+	}
+	expectedAllSettingsHTTPConfig.ReadBufferSize = 123
+	expectedAllSettingsHTTPConfig.WriteBufferSize = 345
+	expectedAllSettingsHTTPConfig.Timeout = time.Second * 10
+
+	expectedJsonHTTPConfig := expectedAllSettingsHTTPConfig
+	expectedJsonHTTPConfig.Headers = map[string]string{}
+	expectedJsonHTTPConfig.TLSSetting = configtls.TLSClientSetting{
+		TLSSetting: configtls.TLSSetting{
+			CAFile:   "",
+			CertFile: "",
+			KeyFile:  "",
+		},
+		Insecure: false,
+	}
+	expectedJsonHTTPConfig.ReadBufferSize = 0
+	expectedJsonHTTPConfig.WriteBufferSize = 524288
+	expectedJsonHTTPConfig.Timeout = time.Second * 30
+
 	tests := []struct {
 		id       component.ID
 		expected component.ExporterConfig
@@ -44,24 +75,8 @@ func TestLoadConfig(t *testing.T) {
 		{
 			id: component.NewIDWithName(typeStr, "allsettings"),
 			expected: &Config{
-				ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Headers: map[string]string{
-						"X-Custom-Header": "loki_rocks",
-					},
-					Endpoint: "https://loki:3100/loki/api/v1/push",
-					TLSSetting: configtls.TLSClientSetting{
-						TLSSetting: configtls.TLSSetting{
-							CAFile:   "/var/lib/mycert.pem",
-							CertFile: "certfile",
-							KeyFile:  "keyfile",
-						},
-						Insecure: true,
-					},
-					ReadBufferSize:  123,
-					WriteBufferSize: 345,
-					Timeout:         time.Second * 10,
-				},
+				ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+				HTTPClientSettings: expectedAllSettingsHTTPConfig,
 				RetrySettings: exporterhelper.RetrySettings{
 					Enabled:         true,
 					InitialInterval: 10 * time.Second,
@@ -93,22 +108,8 @@ func TestLoadConfig(t *testing.T) {
 		{
 			id: component.NewIDWithName(typeStr, "json"),
 			expected: &Config{
-				ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Headers:  map[string]string{},
-					Endpoint: "https://loki:3100/loki/api/v1/push",
-					TLSSetting: configtls.TLSClientSetting{
-						TLSSetting: configtls.TLSSetting{
-							CAFile:   "",
-							CertFile: "",
-							KeyFile:  "",
-						},
-						Insecure: false,
-					},
-					ReadBufferSize:  0,
-					WriteBufferSize: 524288,
-					Timeout:         time.Second * 30,
-				},
+				ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+				HTTPClientSettings: expectedJsonHTTPConfig,
 				RetrySettings: exporterhelper.RetrySettings{
 					Enabled:         true,
 					InitialInterval: 5 * time.Second,

@@ -49,7 +49,7 @@ func Test_NewPRWExporter(t *testing.T) {
 		RetrySettings:      exporterhelper.RetrySettings{},
 		Namespace:          "",
 		ExternalLabels:     map[string]string{},
-		HTTPClientSettings: confighttp.HTTPClientSettings{Endpoint: ""},
+		HTTPClientSettings: confighttp.NewDefaultHTTPClientSettings(),
 		TargetInfo: &TargetInfo{
 			Enabled: true,
 		},
@@ -154,6 +154,21 @@ func Test_Start(t *testing.T) {
 	}
 	set := componenttest.NewNopExporterCreateSettings()
 	set.BuildInfo = buildInfo
+
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Endpoint = "https://some.url:9411/api/prom/push"
+
+	invalidCAConfig := httpConfig
+	invalidCAConfig.TLSSetting = configtls.TLSClientSetting{
+		TLSSetting: configtls.TLSSetting{
+			CAFile:   "non-existent file",
+			CertFile: "",
+			KeyFile:  "",
+		},
+		Insecure:   false,
+		ServerName: "",
+	}
+
 	tests := []struct {
 		name                 string
 		config               *Config
@@ -172,7 +187,7 @@ func Test_Start(t *testing.T) {
 			concurrency:    5,
 			externalLabels: map[string]string{"Key1": "Val1"},
 			set:            set,
-			clientSettings: confighttp.HTTPClientSettings{Endpoint: "https://some.url:9411/api/prom/push"},
+			clientSettings: httpConfig,
 		},
 		{
 			name:                 "invalid_tls",
@@ -182,18 +197,7 @@ func Test_Start(t *testing.T) {
 			externalLabels:       map[string]string{"Key1": "Val1"},
 			set:                  set,
 			returnErrorOnStartUp: true,
-			clientSettings: confighttp.HTTPClientSettings{
-				Endpoint: "https://some.url:9411/api/prom/push",
-				TLSSetting: configtls.TLSClientSetting{
-					TLSSetting: configtls.TLSSetting{
-						CAFile:   "non-existent file",
-						CertFile: "",
-						KeyFile:  "",
-					},
-					Insecure:   false,
-					ServerName: "",
-				},
-			},
+			clientSettings:       invalidCAConfig,
 		},
 	}
 

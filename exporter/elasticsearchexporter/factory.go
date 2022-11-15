@@ -21,7 +21,6 @@ import (
 
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/config"
-	"go.opentelemetry.io/collector/config/confighttp"
 	"go.opentelemetry.io/collector/exporter/exporterhelper"
 )
 
@@ -46,11 +45,14 @@ func NewFactory() component.ExporterFactory {
 
 func createDefaultConfig() component.ExporterConfig {
 	return &Config{
-		ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
-		HTTPClientSettings: confighttp.NewDefaultHTTPClientSettings(),
-		Index:              "",
-		LogsIndex:          defaultLogsIndex,
-		TracesIndex:        defaultTracesIndex,
+		ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
+		// Note: this is a different type to config.HTTPClientConfig
+		HTTPClientSettings: HTTPClientSettings{
+			Timeout: 90 * time.Second,
+		},
+		Index:       "",
+		LogsIndex:   defaultLogsIndex,
+		TracesIndex: defaultTracesIndex,
 		Retry: RetrySettings{
 			Enabled:         true,
 			MaxRequests:     3,

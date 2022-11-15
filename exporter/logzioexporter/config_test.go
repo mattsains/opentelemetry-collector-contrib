@@ -49,15 +49,15 @@ func TestLoadConfig(t *testing.T) {
 	expected.RetrySettings.MaxInterval = 5 * time.Second
 	expected.QueueSettings = exporterhelper.NewDefaultQueueSettings()
 	expected.QueueSettings.Enabled = false
-	expected.HTTPClientSettings = confighttp.HTTPClientSettings{
-		Endpoint: "",
-		Timeout:  30 * time.Second,
-		Headers:  map[string]string{},
-		// Default to gzip compression
-		Compression: configcompression.Gzip,
-		// We almost read 0 bytes, so no need to tune ReadBufferSize.
-		WriteBufferSize: 512 * 1024,
-	}
+	expected.HTTPClientSettings = confighttp.NewDefaultHTTPClientSettings()
+	expected.HTTPClientSettings.Endpoint = ""
+	expected.HTTPClientSettings.Timeout = 30 * time.Second
+	expected.HTTPClientSettings.Headers = map[string]string{}
+	// Default to gzip compression
+	expected.HTTPClientSettings.Compression = configcompression.Gzip
+	// We almost read 0 bytes, so no need to tune ReadBufferSize.
+	expected.HTTPClientSettings.WriteBufferSize = 512 * 1024
+
 	assert.Equal(t, expected, cfg)
 }
 
@@ -77,38 +77,38 @@ func TestDefaultLoadConfig(t *testing.T) {
 	}
 	expected.RetrySettings = exporterhelper.NewDefaultRetrySettings()
 	expected.QueueSettings = exporterhelper.NewDefaultQueueSettings()
-	expected.HTTPClientSettings = confighttp.HTTPClientSettings{
-		Endpoint: "",
-		Timeout:  30 * time.Second,
-		Headers:  map[string]string{},
-		// Default to gzip compression
-		Compression: configcompression.Gzip,
-		// We almost read 0 bytes, so no need to tune ReadBufferSize.
-		WriteBufferSize: 512 * 1024,
-	}
+	expected.HTTPClientSettings = confighttp.NewDefaultHTTPClientSettings()
+	expected.HTTPClientSettings.Endpoint = ""
+	expected.HTTPClientSettings.Timeout = 30 * time.Second
+	expected.HTTPClientSettings.Headers = map[string]string{}
+	// Default to gzip compression
+	expected.HTTPClientSettings.Compression = configcompression.Gzip
+	// We almost read 0 bytes, so no need to tune ReadBufferSize.
+	expected.HTTPClientSettings.WriteBufferSize = 512 * 1024
+
 	assert.Equal(t, expected, cfg)
 }
 
 func TestCheckAndWarnDeprecatedOptions(t *testing.T) {
 	// Config with legacy options
 	actualCfg := &Config{
-		ExporterSettings: config.NewExporterSettings(component.NewIDWithName(typeStr, "2")),
-		QueueSettings:    exporterhelper.NewDefaultQueueSettings(),
-		RetrySettings:    exporterhelper.NewDefaultRetrySettings(),
-		Token:            "logzioTESTtoken",
-		CustomEndpoint:   "https://api.example.com",
-		QueueMaxLength:   10,
-		DrainInterval:    10,
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: "",
-			Timeout:  10 * time.Second,
-			Headers:  map[string]string{},
-			// Default to gzip compression
-			Compression: configcompression.Gzip,
-			// We almost read 0 bytes, so no need to tune ReadBufferSize.
-			WriteBufferSize: 512 * 1024,
-		},
+		ExporterSettings:   config.NewExporterSettings(component.NewIDWithName(typeStr, "2")),
+		QueueSettings:      exporterhelper.NewDefaultQueueSettings(),
+		RetrySettings:      exporterhelper.NewDefaultRetrySettings(),
+		Token:              "logzioTESTtoken",
+		CustomEndpoint:     "https://api.example.com",
+		QueueMaxLength:     10,
+		DrainInterval:      10,
+		HTTPClientSettings: confighttp.NewDefaultHTTPClientSettings(),
 	}
+	actualCfg.HTTPClientSettings.Endpoint = ""
+	actualCfg.HTTPClientSettings.Timeout = 10 * time.Second
+	actualCfg.HTTPClientSettings.Headers = map[string]string{}
+	// Default to gzip compression
+	actualCfg.HTTPClientSettings.Compression = configcompression.Gzip
+	// We almost read 0 bytes, so no need to tune ReadBufferSize.
+	actualCfg.HTTPClientSettings.WriteBufferSize = 512 * 1024
+
 	params := componenttest.NewNopExporterCreateSettings()
 	logger := hclog2ZapLogger{
 		Zap:  params.Logger,
@@ -117,23 +117,23 @@ func TestCheckAndWarnDeprecatedOptions(t *testing.T) {
 	actualCfg.checkAndWarnDeprecatedOptions(&logger)
 
 	expected := &Config{
-		ExporterSettings: config.NewExporterSettings(component.NewIDWithName(typeStr, "2")),
-		Token:            "logzioTESTtoken",
-		CustomEndpoint:   "https://api.example.com",
-		QueueMaxLength:   10,
-		DrainInterval:    10,
-		RetrySettings:    exporterhelper.NewDefaultRetrySettings(),
-		QueueSettings:    exporterhelper.NewDefaultQueueSettings(),
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: "https://api.example.com",
-			Timeout:  10 * time.Second,
-			Headers:  map[string]string{},
-			// Default to gzip compression
-			Compression: configcompression.Gzip,
-			// We almost read 0 bytes, so no need to tune ReadBufferSize.
-			WriteBufferSize: 512 * 1024,
-		},
+		ExporterSettings:   config.NewExporterSettings(component.NewIDWithName(typeStr, "2")),
+		Token:              "logzioTESTtoken",
+		CustomEndpoint:     "https://api.example.com",
+		QueueMaxLength:     10,
+		DrainInterval:      10,
+		RetrySettings:      exporterhelper.NewDefaultRetrySettings(),
+		QueueSettings:      exporterhelper.NewDefaultQueueSettings(),
+		HTTPClientSettings: confighttp.NewDefaultHTTPClientSettings(),
 	}
+	expected.HTTPClientSettings.Endpoint = "https://api.example.com"
+	expected.HTTPClientSettings.Timeout = 10 * time.Second
+	expected.HTTPClientSettings.Headers = map[string]string{}
+	// Default to gzip compression
+	expected.HTTPClientSettings.Compression = configcompression.Gzip
+	// We almost read 0 bytes, so no need to tune ReadBufferSize.
+	expected.HTTPClientSettings.WriteBufferSize = 512 * 1024
+
 	expected.QueueSettings.QueueSize = 10
 	assert.Equal(t, expected, actualCfg)
 }

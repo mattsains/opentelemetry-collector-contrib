@@ -96,7 +96,7 @@ func TestFactory_CreateTracesExporterFails(t *testing.T) {
 		{
 			name: "invalid_url",
 			config: &Config{
-				ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
+				ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
 				HTTPClientSettings: httpConfigWithInvalidURL,
 			},
 			errorMessage: "\"jaeger_thrift\" config requires a valid \"endpoint\": parse \".example:123\": invalid URI for request",
@@ -104,8 +104,9 @@ func TestFactory_CreateTracesExporterFails(t *testing.T) {
 		{
 			name: "negative_duration",
 			config: &Config{
-				ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
+				ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
 				HTTPClientSettings: httpConfigWithNegativeDuration,
+			},
 			errorMessage: "\"jaeger_thrift\" config requires a positive value for \"timeout\"",
 		},
 	}

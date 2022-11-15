@@ -50,6 +50,15 @@ func TestFactory_CreateDefaultConfig(t *testing.T) {
 
 func TestFactory_CreateLogsExporter(t *testing.T) {
 	skip(t, "Flaky Test - See https://github.com/open-telemetry/opentelemetry-collector-contrib/issues/15365")
+
+	localAddressHTTPConfig := confighttp.NewDefaultHTTPClientSettings()
+	localAddressHTTPConfig.Endpoint = "http://" + testutil.GetAvailableLocalAddress(t)
+
+	erroringHTTPConfig := confighttp.NewDefaultHTTPClientSettings()
+	erroringHTTPConfig.CustomRoundTripper = func(next http.RoundTripper) (http.RoundTripper, error) {
+		return nil, fmt.Errorf("this causes newExporter(...) to error")
+	}
+
 	tests := []struct {
 		name         string
 		config       Config
@@ -59,10 +68,8 @@ func TestFactory_CreateLogsExporter(t *testing.T) {
 		{
 			name: "with valid config",
 			config: Config{
-				ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "http://" + testutil.GetAvailableLocalAddress(t),
-				},
+				ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+				HTTPClientSettings: localAddressHTTPConfig,
 				Labels: &LabelsConfig{
 					Attributes:         testValidAttributesWithMapping,
 					ResourceAttributes: testValidResourceWithMapping,
@@ -73,23 +80,16 @@ func TestFactory_CreateLogsExporter(t *testing.T) {
 		{
 			name: "with invalid config",
 			config: Config{
-				ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "",
-				},
+				ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+				HTTPClientSettings: confighttp.NewDefaultHTTPClientSettings(),
 			},
 			shouldError: true,
 		},
 		{
 			name: "with forced bad configuration (for coverage)",
 			config: Config{
-				ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "",
-					CustomRoundTripper: func(next http.RoundTripper) (http.RoundTripper, error) {
-						return nil, fmt.Errorf("this causes newExporter(...) to error")
-					},
-				},
+				ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+				HTTPClientSettings: erroringHTTPConfig,
 			},
 			shouldError: true,
 		},

@@ -35,6 +35,23 @@ func TestLoadConfigNewExporter(t *testing.T) {
 	cm, err := confmaptest.LoadConf(filepath.Join("testdata", "config.yaml"))
 	require.NoError(t, err)
 
+	expectedHTTPConfig := confighttp.NewDefaultHTTPClientSettings()
+	expectedHTTPConfig.Headers = map[string]string{
+		"X-Custom-Header": "loki_rocks",
+	}
+	expectedHTTPConfig.Endpoint = "https://loki:3100/loki/api/v1/push"
+	expectedHTTPConfig.TLSSetting = configtls.TLSClientSetting{
+		TLSSetting: configtls.TLSSetting{
+			CAFile:   "/var/lib/mycert.pem",
+			CertFile: "certfile",
+			KeyFile:  "keyfile",
+		},
+		Insecure: true,
+	}
+	expectedHTTPConfig.ReadBufferSize = 123
+	expectedHTTPConfig.WriteBufferSize = 345
+	expectedHTTPConfig.Timeout = time.Second * 10
+
 	tests := []struct {
 		id       component.ID
 		expected component.ExporterConfig
@@ -42,24 +59,8 @@ func TestLoadConfigNewExporter(t *testing.T) {
 		{
 			id: component.NewIDWithName(typeStr, "allsettings"),
 			expected: &Config{
-				ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Headers: map[string]string{
-						"X-Custom-Header": "loki_rocks",
-					},
-					Endpoint: "https://loki:3100/loki/api/v1/push",
-					TLSSetting: configtls.TLSClientSetting{
-						TLSSetting: configtls.TLSSetting{
-							CAFile:   "/var/lib/mycert.pem",
-							CertFile: "certfile",
-							KeyFile:  "keyfile",
-						},
-						Insecure: true,
-					},
-					ReadBufferSize:  123,
-					WriteBufferSize: 345,
-					Timeout:         time.Second * 10,
-				},
+				ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+				HTTPClientSettings: expectedHTTPConfig,
 				RetrySettings: exporterhelper.RetrySettings{
 					Enabled:         true,
 					InitialInterval: 10 * time.Second,
@@ -91,6 +92,9 @@ func TestLoadConfigNewExporter(t *testing.T) {
 }
 
 func TestIsLegacy(t *testing.T) {
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Endpoint = "https://loki.example.com"
+
 	testCases := []struct {
 		desc    string
 		cfg     *Config
@@ -100,28 +104,22 @@ func TestIsLegacy(t *testing.T) {
 			// the default mode for an empty config is the new logic
 			desc: "not legacy",
 			cfg: &Config{
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "https://loki.example.com",
-				},
+				HTTPClientSettings: httpConfig,
 			},
 			outcome: false,
 		},
 		{
 			desc: "format is set to body",
 			cfg: &Config{
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "https://loki.example.com",
-				},
-				Format: stringp("body"),
+				HTTPClientSettings: httpConfig,
+				Format:             stringp("body"),
 			},
 			outcome: true,
 		},
 		{
 			desc: "a label is specified",
 			cfg: &Config{
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "https://loki.example.com",
-				},
+				HTTPClientSettings: httpConfig,
 				Labels: &LabelsConfig{
 					Attributes: map[string]string{"some_attribute": "some_value"},
 				},
@@ -131,9 +129,7 @@ func TestIsLegacy(t *testing.T) {
 		{
 			desc: "a tenant is specified",
 			cfg: &Config{
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "https://loki.example.com",
-				},
+				HTTPClientSettings: httpConfig,
 				Tenant: &Tenant{
 					Source: "static",
 					Value:  "acme",
@@ -144,10 +140,8 @@ func TestIsLegacy(t *testing.T) {
 		{
 			desc: "a tenant ID is specified",
 			cfg: &Config{
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "https://loki.example.com",
-				},
-				TenantID: stringp("acme"),
+				HTTPClientSettings: httpConfig,
+				TenantID:           stringp("acme"),
 			},
 			outcome: true,
 		},

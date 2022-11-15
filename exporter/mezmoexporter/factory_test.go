@@ -37,16 +37,17 @@ func TestCreateDefaultConfig(t *testing.T) {
 	factory := NewFactory()
 	cfg := factory.CreateDefaultConfig()
 
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Timeout = 5 * time.Second
+
 	assert.Equal(t, cfg, &Config{
 		ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
 		IngestURL:        defaultIngestURL,
 		IngestKey:        "",
 
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Timeout: 5 * time.Second,
-		},
-		RetrySettings: exporterhelper.NewDefaultRetrySettings(),
-		QueueSettings: exporterhelper.NewDefaultQueueSettings(),
+		HTTPClientSettings: httpConfig,
+		RetrySettings:      exporterhelper.NewDefaultRetrySettings(),
+		QueueSettings:      exporterhelper.NewDefaultQueueSettings(),
 	})
 	assert.NoError(t, componenttest.CheckConfigStruct(cfg))
 }

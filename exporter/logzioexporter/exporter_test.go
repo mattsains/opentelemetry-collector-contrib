@@ -201,13 +201,13 @@ func TestExportErrors(tester *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 			rw.WriteHeader(test.status)
 		}))
+		httpConfig := confighttp.NewDefaultHTTPClientSettings()
+		httpConfig.Endpoint = server.URL
 		cfg := &Config{
-			Region:           "",
-			Token:            "token",
-			ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-			HTTPClientSettings: confighttp.HTTPClientSettings{
-				Endpoint: server.URL,
-			},
+			Region:             "",
+			Token:              "token",
+			ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+			HTTPClientSettings: httpConfig,
 		}
 		td := newTestTracesWithAttributes()
 		ld := testdata.GenerateLogsManyLogRecordsSameResource(10)
@@ -267,14 +267,15 @@ func TestPushTraceData(tester *testing.T) {
 		recordedRequests, _ = io.ReadAll(req.Body)
 		rw.WriteHeader(http.StatusOK)
 	}))
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Endpoint = server.URL
+	httpConfig.Compression = configcompression.Gzip
+
 	cfg := Config{
-		ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-		Token:            "token",
-		Region:           "",
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint:    server.URL,
-			Compression: configcompression.Gzip,
-		},
+		ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+		Token:              "token",
+		Region:             "",
+		HTTPClientSettings: httpConfig,
 	}
 	defer server.Close()
 	td := newTestTraces()
@@ -301,14 +302,15 @@ func TestPushLogsData(tester *testing.T) {
 		recordedRequests, _ = io.ReadAll(req.Body)
 		rw.WriteHeader(http.StatusOK)
 	}))
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Endpoint = server.URL
+	httpConfig.Compression = configcompression.Gzip
+
 	cfg := Config{
-		ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-		Token:            "token",
-		Region:           "",
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint:    server.URL,
-			Compression: configcompression.Gzip,
-		},
+		ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+		Token:              "token",
+		Region:             "",
+		HTTPClientSettings: httpConfig,
 	}
 	defer server.Close()
 	ld := testdata.GenerateLogsManyLogRecordsSameResource(2)

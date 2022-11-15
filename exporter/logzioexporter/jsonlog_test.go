@@ -96,14 +96,15 @@ func TestSetTimeStamp(t *testing.T) {
 		rw.WriteHeader(http.StatusOK)
 	}))
 	ld := generateLogsOneEmptyTimestamp()
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Endpoint = server.URL
+	httpConfig.Compression = configcompression.Gzip
+
 	cfg := &Config{
-		Region:           "us",
-		Token:            "token",
-		ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint:    server.URL,
-			Compression: configcompression.Gzip,
-		},
+		Region:             "us",
+		Token:              "token",
+		ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+		HTTPClientSettings: httpConfig,
 	}
 	var err error
 	params := componenttest.NewNopExporterCreateSettings()
