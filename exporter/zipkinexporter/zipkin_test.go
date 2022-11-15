@@ -38,6 +38,12 @@ import (
 	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/zipkinreceiver"
 )
 
+func newHTTPConfig(endpoint string) confighttp.HTTPClientSettings {
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Endpoint = endpoint
+	return httpConfig
+}
+
 // This function tests that Zipkin spans that are received then processed roundtrip
 // back to almost the same JSON with differences:
 // a) Go's net.IP.String intentional shortens 0s with "::" but also converts to hex values
@@ -59,10 +65,8 @@ func TestZipkinExporter_roundtripJSON(t *testing.T) {
 	defer cst.Close()
 
 	cfg := &Config{
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: cst.URL,
-		},
-		Format: "json",
+		HTTPClientSettings: newHTTPConfig(cst.URL),
+		Format:             "json",
 	}
 	zexp, err := NewFactory().CreateTracesExporter(context.Background(), componenttest.NewNopExporterCreateSettings(), cfg)
 	assert.NoError(t, err)
@@ -283,10 +287,8 @@ const zipkinSpansJSONJavaLibrary = `
 
 func TestZipkinExporter_invalidFormat(t *testing.T) {
 	config := &Config{
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: "1.2.3.4",
-		},
-		Format: "foobar",
+		HTTPClientSettings: newHTTPConfig("1.2.3.4"),
+		Format:             "foobar",
 	}
 	f := NewFactory()
 	set := componenttest.NewNopExporterCreateSettings()
@@ -307,10 +309,8 @@ func TestZipkinExporter_roundtripProto(t *testing.T) {
 	defer cst.Close()
 
 	cfg := &Config{
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: cst.URL,
-		},
-		Format: "proto",
+		HTTPClientSettings: newHTTPConfig(cst.URL),
+		Format:             "proto",
 	}
 	zexp, err := NewFactory().CreateTracesExporter(context.Background(), componenttest.NewNopExporterCreateSettings(), cfg)
 	require.NoError(t, err)

@@ -42,6 +42,20 @@ type clientRequestArgs struct {
 
 func TestExtension(t *testing.T) {
 	listenAt := testutil.GetAvailableLocalAddress(t)
+
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Headers = map[string]string{
+		"key": "value",
+	}
+
+	invalidTLSHTTPConfig := confighttp.NewDefaultHTTPClientSettings()
+	invalidTLSHTTPConfig.Endpoint = "localhost:9090"
+	invalidTLSHTTPConfig.TLSSetting = configtls.TLSClientSetting{
+		TLSSetting: configtls.TLSSetting{
+			CAFile: "/non/existent",
+		},
+	}
+
 	tests := []struct {
 		name                        string
 		config                      *Config
@@ -81,11 +95,7 @@ func TestExtension(t *testing.T) {
 				Ingress: confighttp.HTTPServerSettings{
 					Endpoint: listenAt,
 				},
-				Egress: confighttp.HTTPClientSettings{
-					Headers: map[string]string{
-						"key": "value",
-					},
-				},
+				Egress: httpConfig,
 			},
 			expectedbackendStatusCode:   http.StatusAccepted,
 			expectedBackendResponseBody: []byte("hello world with additional headers"),
@@ -103,11 +113,7 @@ func TestExtension(t *testing.T) {
 				Ingress: confighttp.HTTPServerSettings{
 					Endpoint: listenAt,
 				},
-				Egress: confighttp.HTTPClientSettings{
-					Headers: map[string]string{
-						"key": "value",
-					},
-				},
+				Egress: httpConfig,
 			},
 			expectedbackendStatusCode:   http.StatusInternalServerError,
 			expectedBackendResponseBody: []byte("\n"),
@@ -123,11 +129,7 @@ func TestExtension(t *testing.T) {
 				Ingress: confighttp.HTTPServerSettings{
 					Endpoint: listenAt,
 				},
-				Egress: confighttp.HTTPClientSettings{
-					Headers: map[string]string{
-						"key": "value",
-					},
-				},
+				Egress: httpConfig,
 			},
 			expectedbackendStatusCode:   http.StatusBadGateway,
 			expectedBackendResponseBody: []byte("\n"),
@@ -140,14 +142,7 @@ func TestExtension(t *testing.T) {
 		{
 			name: "Invalid config - HTTP Client creation fails",
 			config: &Config{
-				Egress: confighttp.HTTPClientSettings{
-					Endpoint: "localhost:9090",
-					TLSSetting: configtls.TLSClientSetting{
-						TLSSetting: configtls.TLSSetting{
-							CAFile: "/non/existent",
-						},
-					},
-				},
+				Egress: invalidTLSHTTPConfig,
 			},
 			startUpError:        true,
 			startUpErrorMessage: "failed to create HTTP Client: ",

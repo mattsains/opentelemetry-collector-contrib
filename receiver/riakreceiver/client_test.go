@@ -38,33 +38,31 @@ const (
 )
 
 func TestNewClient(t *testing.T) {
+	invalidTLSHTTPConfig := confighttp.NewDefaultHTTPClientSettings()
+	invalidTLSHTTPConfig.Endpoint = defaultEndpoint
+	invalidTLSHTTPConfig.TLSSetting = configtls.TLSClientSetting{
+		TLSSetting: configtls.TLSSetting{
+			CAFile: "/non/existent",
+		},
+	}
+
+	validTLSHTTPConfig := confighttp.NewDefaultHTTPClientSettings()
+	validTLSHTTPConfig.Endpoint = defaultEndpoint
+	validTLSHTTPConfig.TLSSetting = configtls.TLSClientSetting{}
+
 	testCase := []struct {
 		desc        string
 		cfg         *Config
 		expectError error
 	}{
 		{
-			desc: "Invalid HTTP config",
-			cfg: &Config{
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: defaultEndpoint,
-					TLSSetting: configtls.TLSClientSetting{
-						TLSSetting: configtls.TLSSetting{
-							CAFile: "/non/existent",
-						},
-					},
-				},
-			},
+			desc:        "Invalid HTTP config",
+			cfg:         &Config{HTTPClientSettings: invalidTLSHTTPConfig},
 			expectError: errors.New("failed to create HTTP Client"),
 		},
 		{
-			desc: "Valid Configuration",
-			cfg: &Config{
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					TLSSetting: configtls.TLSClientSetting{},
-					Endpoint:   defaultEndpoint,
-				},
-			},
+			desc:        "Valid Configuration",
+			cfg:         &Config{HTTPClientSettings: validTLSHTTPConfig},
 			expectError: nil,
 		},
 	}

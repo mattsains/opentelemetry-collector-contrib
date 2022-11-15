@@ -37,6 +37,18 @@ import (
 )
 
 func TestScraperStart(t *testing.T) {
+	invalidTLSHTTPConfig := confighttp.NewDefaultHTTPClientSettings()
+	invalidTLSHTTPConfig.Endpoint = defaultEndpoint
+	invalidTLSHTTPConfig.TLSSetting = configtls.TLSClientSetting{
+		TLSSetting: configtls.TLSSetting{
+			CAFile: "/non/existent",
+		},
+	}
+
+	validTLSHTTPConfig := confighttp.NewDefaultHTTPClientSettings()
+	validTLSHTTPConfig.Endpoint = defaultEndpoint
+	validTLSHTTPConfig.TLSSetting = configtls.TLSClientSetting{}
+
 	testcases := []struct {
 		desc        string
 		scraper     *riakScraper
@@ -45,16 +57,7 @@ func TestScraperStart(t *testing.T) {
 		{
 			desc: "Bad Config",
 			scraper: &riakScraper{
-				cfg: &Config{
-					HTTPClientSettings: confighttp.HTTPClientSettings{
-						Endpoint: defaultEndpoint,
-						TLSSetting: configtls.TLSClientSetting{
-							TLSSetting: configtls.TLSSetting{
-								CAFile: "/non/existent",
-							},
-						},
-					},
-				},
+				cfg:      &Config{HTTPClientSettings: invalidTLSHTTPConfig},
 				settings: componenttest.NewNopTelemetrySettings(),
 			},
 			expectError: true,
@@ -63,12 +66,7 @@ func TestScraperStart(t *testing.T) {
 		{
 			desc: "Valid Config",
 			scraper: &riakScraper{
-				cfg: &Config{
-					HTTPClientSettings: confighttp.HTTPClientSettings{
-						TLSSetting: configtls.TLSClientSetting{},
-						Endpoint:   defaultEndpoint,
-					},
-				},
+				cfg:      &Config{HTTPClientSettings: validTLSHTTPConfig},
 				settings: componenttest.NewNopTelemetrySettings(),
 			},
 			expectError: false,

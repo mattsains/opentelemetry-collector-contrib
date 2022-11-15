@@ -645,16 +645,15 @@ func Test_PushMetrics(t *testing.T) {
 
 					defer server.Close()
 
+					httpConfig := confighttp.NewDefaultHTTPClientSettings()
+					httpConfig.Endpoint = server.URL
+					// We almost read 0 bytes, so no need to tune ReadBufferSize.
+					httpConfig.WriteBufferSize = 512 * 1024
 					cfg := &Config{
-						ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-						Namespace:        "",
-						HTTPClientSettings: confighttp.HTTPClientSettings{
-							Endpoint: server.URL,
-							// We almost read 0 bytes, so no need to tune ReadBufferSize.
-							ReadBufferSize:  0,
-							WriteBufferSize: 512 * 1024,
-						},
-						RemoteWriteQueue: RemoteWriteQueue{NumConsumers: 1},
+						ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+						Namespace:          "",
+						HTTPClientSettings: httpConfig,
+						RemoteWriteQueue:   RemoteWriteQueue{NumConsumers: 1},
 						TargetInfo: &TargetInfo{
 							Enabled: true,
 						},
@@ -829,13 +828,13 @@ func TestWALOnExporterRoundTrip(t *testing.T) {
 	// 2. Create the WAL configuration, create the
 	// exporter and export some time series!
 	tempDir := t.TempDir()
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Endpoint = prweServer.URL
 	cfg := &Config{
-		ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-		Namespace:        "test_ns",
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: prweServer.URL,
-		},
-		RemoteWriteQueue: RemoteWriteQueue{NumConsumers: 1},
+		ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+		Namespace:          "test_ns",
+		HTTPClientSettings: httpConfig,
+		RemoteWriteQueue:   RemoteWriteQueue{NumConsumers: 1},
 		WAL: &WALConfig{
 			Directory:  tempDir,
 			BufferSize: 1,

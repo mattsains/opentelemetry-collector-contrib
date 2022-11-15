@@ -68,15 +68,15 @@ func TestScraper(t *testing.T) {
 }
 
 func TestScraperFailedStart(t *testing.T) {
-	sc := newApacheScraper(componenttest.NewNopReceiverCreateSettings(), &Config{
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: "localhost:8080",
-			TLSSetting: configtls.TLSClientSetting{
-				TLSSetting: configtls.TLSSetting{
-					CAFile: "/non/existent",
-				},
-			},
+	invalidTLSHTTPConfig := confighttp.NewDefaultHTTPClientSettings()
+	invalidTLSHTTPConfig.Endpoint = "localhost:8080"
+	invalidTLSHTTPConfig.TLSSetting = configtls.TLSClientSetting{
+		TLSSetting: configtls.TLSSetting{
+			CAFile: "/non/existent",
 		},
+	}
+	sc := newApacheScraper(componenttest.NewNopReceiverCreateSettings(), &Config{
+		HTTPClientSettings: invalidTLSHTTPConfig,
 	},
 		"localhost",
 		"8080")

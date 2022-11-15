@@ -154,7 +154,7 @@ func TestMetricSettings(t *testing.T) {
 	mockClient := new(MockClient)
 	mockClient.On("GetStats", "_local").Return(getStats("response_2.31.json"))
 	cfg := &Config{
-		HTTPClientSettings: confighttp.HTTPClientSettings{},
+		HTTPClientSettings: confighttp.NewDefaultHTTPClientSettings(),
 		Metrics: metadata.MetricsSettings{
 			CouchdbAverageRequestTime: metadata.MetricSettings{Enabled: false},
 			CouchdbDatabaseOpen:       metadata.MetricSettings{Enabled: false},

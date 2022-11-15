@@ -61,11 +61,12 @@ func TestScraperError(t *testing.T) {
 		}
 		rw.WriteHeader(404)
 	}))
+
 	t.Run("404", func(t *testing.T) {
+		badPathHTTPConfig := confighttp.NewDefaultHTTPClientSettings()
+		badPathHTTPConfig.Endpoint = nginxMock.URL + "/badpath"
 		sc := newNginxScraper(componenttest.NewNopReceiverCreateSettings(), &Config{
-			HTTPClientSettings: confighttp.HTTPClientSettings{
-				Endpoint: nginxMock.URL + "/badpath",
-			},
+			HTTPClientSettings: badPathHTTPConfig,
 		})
 		err := sc.start(context.Background(), componenttest.NewNopHost())
 		require.NoError(t, err)
@@ -74,10 +75,10 @@ func TestScraperError(t *testing.T) {
 	})
 
 	t.Run("parse error", func(t *testing.T) {
+		httpConfig := confighttp.NewDefaultHTTPClientSettings()
+		httpConfig.Endpoint = nginxMock.URL + "/status"
 		sc := newNginxScraper(componenttest.NewNopReceiverCreateSettings(), &Config{
-			HTTPClientSettings: confighttp.HTTPClientSettings{
-				Endpoint: nginxMock.URL + "/status",
-			},
+			HTTPClientSettings: httpConfig,
 		})
 		err := sc.start(context.Background(), componenttest.NewNopHost())
 		require.NoError(t, err)
@@ -87,15 +88,15 @@ func TestScraperError(t *testing.T) {
 }
 
 func TestScraperFailedStart(t *testing.T) {
-	sc := newNginxScraper(componenttest.NewNopReceiverCreateSettings(), &Config{
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: "localhost:8080",
-			TLSSetting: configtls.TLSClientSetting{
-				TLSSetting: configtls.TLSSetting{
-					CAFile: "/non/existent",
-				},
-			},
+	invalidTLSHTTPConfig := confighttp.NewDefaultHTTPClientSettings()
+	invalidTLSHTTPConfig.Endpoint = "localhost:8080"
+	invalidTLSHTTPConfig.TLSSetting = configtls.TLSClientSetting{
+		TLSSetting: configtls.TLSSetting{
+			CAFile: "/non/existent",
 		},
+	}
+	sc := newNginxScraper(componenttest.NewNopReceiverCreateSettings(), &Config{
+		HTTPClientSettings: invalidTLSHTTPConfig,
 	})
 	err := sc.start(context.Background(), componenttest.NewNopHost())
 	require.Error(t, err)

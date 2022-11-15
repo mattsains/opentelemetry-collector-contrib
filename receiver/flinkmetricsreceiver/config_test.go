@@ -28,27 +28,25 @@ import (
 )
 
 func TestValidate(t *testing.T) {
+	invalidHTTPConfig := confighttp.NewDefaultHTTPClientSettings()
+	invalidHTTPConfig.Endpoint = "invalid://endpoint:  12efg"
+
+	validHTTPConfig := confighttp.NewDefaultHTTPClientSettings()
+	validHTTPConfig.Endpoint = defaultEndpoint
+
 	testCases := []struct {
 		desc        string
 		cfg         *Config
 		expectedErr error
 	}{
 		{
-			desc: "invalid endpoint",
-			cfg: &Config{
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "invalid://endpoint:  12efg",
-				},
-			},
+			desc:        "invalid endpoint",
+			cfg:         &Config{HTTPClientSettings: invalidHTTPConfig},
 			expectedErr: fmt.Errorf("\"endpoint\" must be in the form of <scheme>://<hostname>:<port>: %w", errors.New(`parse "invalid://endpoint:  12efg": invalid port ":  12efg" after host`)),
 		},
 		{
-			desc: "valid config",
-			cfg: &Config{
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: defaultEndpoint,
-				},
-			},
+			desc:        "valid config",
+			cfg:         &Config{HTTPClientSettings: validHTTPConfig},
 			expectedErr: nil,
 		},
 	}

@@ -25,6 +25,12 @@ import (
 )
 
 func TestValidate(t *testing.T) {
+	validHTTPConfig := confighttp.NewDefaultHTTPClientSettings()
+	validHTTPConfig.Endpoint = defaultEndpoint
+
+	invalidHTTPConfig := confighttp.NewDefaultHTTPClientSettings()
+	invalidHTTPConfig.Endpoint = "invalid://endpoint:  12efg"
+
 	testCases := []struct {
 		desc        string
 		cfg         *Config
@@ -32,11 +38,7 @@ func TestValidate(t *testing.T) {
 	}{
 		{
 			desc: "missing username, password, and invalid endpoint",
-			cfg: &Config{
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "invalid://endpoint:  12efg",
-				},
-			},
+			cfg:  &Config{HTTPClientSettings: invalidHTTPConfig},
 			expectedErr: multierr.Combine(
 				errMissingUsername,
 				errMissingPassword,
@@ -46,10 +48,8 @@ func TestValidate(t *testing.T) {
 		{
 			desc: "missing password and invalid endpoint",
 			cfg: &Config{
-				Username: "otelu",
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "invalid://endpoint:  12efg",
-				},
+				Username:           "otelu",
+				HTTPClientSettings: invalidHTTPConfig,
 			},
 			expectedErr: multierr.Combine(
 				errMissingPassword,
@@ -59,10 +59,8 @@ func TestValidate(t *testing.T) {
 		{
 			desc: "missing username and invalid endpoint",
 			cfg: &Config{
-				Password: "otelp",
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "invalid://endpoint:  12efg",
-				},
+				Password:           "otelp",
+				HTTPClientSettings: invalidHTTPConfig,
 			},
 			expectedErr: multierr.Combine(
 				errMissingUsername,
@@ -72,11 +70,9 @@ func TestValidate(t *testing.T) {
 		{
 			desc: "invalid endpoint",
 			cfg: &Config{
-				Username: "otelu",
-				Password: "otelp",
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "invalid://endpoint:  12efg",
-				},
+				Username:           "otelu",
+				Password:           "otelp",
+				HTTPClientSettings: invalidHTTPConfig,
 			},
 			expectedErr: multierr.Combine(
 				fmt.Errorf("%s: %w", errInvalidEndpoint, errors.New(`parse "invalid://endpoint:  12efg": invalid port ":  12efg" after host`)),
@@ -85,11 +81,9 @@ func TestValidate(t *testing.T) {
 		{
 			desc: "valid config",
 			cfg: &Config{
-				Username: "otelu",
-				Password: "otelp",
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: defaultEndpoint,
-				},
+				Username:           "otelu",
+				Password:           "otelp",
+				HTTPClientSettings: validHTTPConfig,
 			},
 			expectedErr: nil,
 		},

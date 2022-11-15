@@ -52,11 +52,12 @@ func prepareSenderTest(t *testing.T, cb []func(w http.ResponseWriter, req *http.
 		}
 	}))
 
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Endpoint = testServer.URL
+	httpConfig.Timeout = defaultTimeout
+
 	cfg := &Config{
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: testServer.URL,
-			Timeout:  defaultTimeout,
-		},
+		HTTPClientSettings: httpConfig,
 		LogFormat:          "text",
 		MetricFormat:       "carbon2",
 		Client:             "otelcol",

@@ -55,6 +55,13 @@ func TestTrackerAddSpans(t *testing.T) {
 
 func TestTrackerStart(t *testing.T) {
 
+	invalidHTTPConfig := confighttp.NewDefaultHTTPClientSettings()
+	invalidHTTPConfig.Endpoint = "localhost:9090"
+	invalidHTTPConfig.TLSSetting = configtls.TLSClientSetting{
+		TLSSetting: configtls.TLSSetting{
+			CAFile: "/non/existent",
+		},
+	}
 	tests := []struct {
 		name    string
 		config  *Config
@@ -64,14 +71,7 @@ func TestTrackerStart(t *testing.T) {
 		{
 			name: "invalid http client settings fails",
 			config: &Config{
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "localhost:9090",
-					TLSSetting: configtls.TLSClientSetting{
-						TLSSetting: configtls.TLSSetting{
-							CAFile: "/non/existent",
-						},
-					},
-				},
+				HTTPClientSettings: invalidHTTPConfig,
 			},
 			wantErr: true,
 			errMsg:  "failed to create correlation API client: failed to load TLS config",

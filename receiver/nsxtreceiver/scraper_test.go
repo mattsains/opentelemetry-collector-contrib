@@ -25,7 +25,6 @@ import (
 	mock "github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/component/componenttest"
-	"go.opentelemetry.io/collector/config/confighttp"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 
 	"github.com/open-telemetry/opentelemetry-collector-contrib/internal/scrapertest"
@@ -112,10 +111,8 @@ func TestStartClientAlreadySet(t *testing.T) {
 	mockClient := mockServer(t)
 	scraper := newScraper(
 		&Config{
-			Metrics: metadata.DefaultMetricsSettings(),
-			HTTPClientSettings: confighttp.HTTPClientSettings{
-				Endpoint: mockClient.URL,
-			},
+			Metrics:            metadata.DefaultMetricsSettings(),
+			HTTPClientSettings: newHTTPConfig(mockClient.URL),
 		},
 		componenttest.NewNopReceiverCreateSettings(),
 	)
@@ -126,10 +123,8 @@ func TestStartClientAlreadySet(t *testing.T) {
 func TestStartBadUrl(t *testing.T) {
 	scraper := newScraper(
 		&Config{
-			Metrics: metadata.DefaultMetricsSettings(),
-			HTTPClientSettings: confighttp.HTTPClientSettings{
-				Endpoint: "\x00",
-			},
+			Metrics:            metadata.DefaultMetricsSettings(),
+			HTTPClientSettings: newHTTPConfig("\x00"),
 		},
 		componenttest.NewNopReceiverCreateSettings(),
 	)
@@ -141,10 +136,8 @@ func TestStartBadUrl(t *testing.T) {
 func TestScraperRecordNoStat(t *testing.T) {
 	scraper := newScraper(
 		&Config{
-			HTTPClientSettings: confighttp.HTTPClientSettings{
-				Endpoint: "http://localhost",
-			},
-			Metrics: metadata.DefaultMetricsSettings(),
+			HTTPClientSettings: newHTTPConfig("http://localhost"),
+			Metrics:            metadata.DefaultMetricsSettings(),
 		},
 		componenttest.NewNopReceiverCreateSettings(),
 	)

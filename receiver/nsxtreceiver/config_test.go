@@ -26,6 +26,12 @@ import (
 	"go.opentelemetry.io/collector/confmap/confmaptest"
 )
 
+func newHTTPConfig(endpoint string) confighttp.HTTPClientSettings {
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Endpoint = endpoint
+	return httpConfig
+}
+
 func TestMetricValidation(t *testing.T) {
 	defaultConfig := createDefaultConfig().(*Config)
 	cases := []struct {
@@ -41,38 +47,30 @@ func TestMetricValidation(t *testing.T) {
 		{
 			desc: "not valid scheme",
 			cfg: &Config{
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "wss://not-supported-websockets",
-				},
+				HTTPClientSettings: newHTTPConfig("wss://not-supported-websockets"),
 			},
 			expectedError: errors.New("url scheme must be http or https"),
 		},
 		{
 			desc: "unparseable url",
 			cfg: &Config{
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "\x00",
-				},
+				HTTPClientSettings: newHTTPConfig("\x00"),
 			},
 			expectedError: errors.New("parse"),
 		},
 		{
 			desc: "username not provided",
 			cfg: &Config{
-				Password: "password",
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "http://localhost",
-				},
+				Password:           "password",
+				HTTPClientSettings: newHTTPConfig("http://localhost"),
 			},
 			expectedError: errors.New("username not provided"),
 		},
 		{
 			desc: "password not provided",
 			cfg: &Config{
-				Username: "otelu",
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "http://localhost",
-				},
+				Username:           "otelu",
+				HTTPClientSettings: newHTTPConfig("http://localhost"),
 			},
 			expectedError: errors.New("password not provided"),
 		},

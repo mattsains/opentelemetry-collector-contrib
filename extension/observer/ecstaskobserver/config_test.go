@@ -30,6 +30,9 @@ import (
 func TestLoadConfig(t *testing.T) {
 	t.Parallel()
 
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Endpoint = "http://a.valid.url:1234/path"
+
 	tests := []struct {
 		id          component.ID
 		expected    component.ExtensionConfig
@@ -42,12 +45,10 @@ func TestLoadConfig(t *testing.T) {
 		{
 			id: component.NewIDWithName(typeStr, "with-endpoint"),
 			expected: &Config{
-				ExtensionSettings: config.NewExtensionSettings(component.NewID(typeStr)),
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "http://a.valid.url:1234/path",
-				},
-				PortLabels:      []string{"ECS_TASK_OBSERVER_PORT"},
-				RefreshInterval: 100 * time.Second,
+				ExtensionSettings:  config.NewExtensionSettings(component.NewID(typeStr)),
+				HTTPClientSettings: httpConfig,
+				PortLabels:         []string{"ECS_TASK_OBSERVER_PORT"},
+				RefreshInterval:    100 * time.Second,
 			},
 		},
 		{

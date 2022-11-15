@@ -36,6 +36,13 @@ func TestFactory(t *testing.T) {
 	require.Equal(t, ":6060", cfg.Ingress.Endpoint)
 	require.Equal(t, 10*time.Second, cfg.Egress.Timeout)
 
+	validHTTPConfig := confighttp.NewDefaultHTTPClientSettings()
+	validHTTPConfig.Endpoint = "localhost:9090"
+
+	invalidHTTPConfig := confighttp.NewDefaultHTTPClientSettings()
+	// it's invalid because 456 is too big for an octet
+	invalidHTTPConfig.Endpoint = "123.456.7.89:9090"
+
 	tests := []struct {
 		name           string
 		config         *Config
@@ -50,13 +57,13 @@ func TestFactory(t *testing.T) {
 		},
 		{
 			name:           "Invalid config",
-			config:         &Config{Egress: confighttp.HTTPClientSettings{Endpoint: "123.456.7.89:9090"}},
+			config:         &Config{Egress: invalidHTTPConfig},
 			wantErr:        true,
 			wantErrMessage: "enter a valid URL for 'egress.endpoint': parse \"123.456.7.89:9090\": first path segment in URL cannot",
 		},
 		{
 			name:   "Valid config",
-			config: &Config{Egress: confighttp.HTTPClientSettings{Endpoint: "localhost:9090"}},
+			config: &Config{Egress: validHTTPConfig},
 		},
 	}
 	for _, test := range tests {

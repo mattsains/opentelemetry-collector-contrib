@@ -32,9 +32,9 @@ func TestInvalidConfig(t *testing.T) {
 	noEndpointErr := invalid.validate()
 	require.Error(t, noEndpointErr)
 
-	invalid = Config{
-		HTTPClientSettings: confighttp.HTTPClientSettings{Endpoint: ":123:456"},
-	}
+	invalid = Config{HTTPClientSettings: confighttp.NewDefaultHTTPClientSettings()}
+	invalid.HTTPClientSettings.Endpoint = ":123:456"
+
 	invalidURLErr := invalid.validate()
 	require.Error(t, invalidURLErr)
 }

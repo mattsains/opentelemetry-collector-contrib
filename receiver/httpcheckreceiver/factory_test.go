@@ -31,6 +31,10 @@ import (
 )
 
 func TestNewFactory(t *testing.T) {
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Endpoint = defaultEndpoint
+	httpConfig.Timeout = 10 * time.Second
+
 	testCases := []struct {
 		desc     string
 		testFunc func(*testing.T)
@@ -52,12 +56,9 @@ func TestNewFactory(t *testing.T) {
 						ReceiverSettings:   config.NewReceiverSettings(component.NewID(typeStr)),
 						CollectionInterval: 10 * time.Second,
 					},
-					HTTPClientSettings: confighttp.HTTPClientSettings{
-						Endpoint: defaultEndpoint,
-						Timeout:  10 * time.Second,
-					},
-					Metrics: metadata.DefaultMetricsSettings(),
-					Method:  "GET",
+					HTTPClientSettings: httpConfig,
+					Metrics:            metadata.DefaultMetricsSettings(),
+					Method:             "GET",
 				}
 
 				require.Equal(t, expectedCfg, factory.CreateDefaultConfig())

@@ -40,18 +40,24 @@ func defaultClient(t *testing.T, endpoint string) client {
 	return couchdbClient
 }
 
+func newHTTPConfig(endpoint string) confighttp.HTTPClientSettings {
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Endpoint = endpoint
+	return httpConfig
+}
+
 func TestNewCouchDBClient(t *testing.T) {
 	t.Run("Invalid config", func(t *testing.T) {
+		invalidHTTPConfig := confighttp.NewDefaultHTTPClientSettings()
+		invalidHTTPConfig.Endpoint = defaultEndpoint
+		invalidHTTPConfig.TLSSetting = configtls.TLSClientSetting{
+			TLSSetting: configtls.TLSSetting{
+				CAFile: "/non/existent",
+			},
+		}
+
 		couchdbClient, err := newCouchDBClient(
-			&Config{
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: defaultEndpoint,
-					TLSSetting: configtls.TLSClientSetting{
-						TLSSetting: configtls.TLSSetting{
-							CAFile: "/non/existent",
-						},
-					},
-				}},
+			&Config{HTTPClientSettings: invalidHTTPConfig},
 			componenttest.NewNopHost(),
 			componenttest.NewNopTelemetrySettings())
 
@@ -120,11 +126,9 @@ func TestGet(t *testing.T) {
 		url := ts.URL + "/_node/_local/_stats/couchdb"
 		couchdbClient, err := newCouchDBClient(
 			&Config{
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: url,
-				},
-				Username: "unauthorized",
-				Password: "unauthorized",
+				HTTPClientSettings: newHTTPConfig(url),
+				Username:           "unauthorized",
+				Password:           "unauthorized",
 			},
 			componenttest.NewNopHost(),
 			componenttest.NewNopTelemetrySettings())
@@ -193,11 +197,9 @@ func TestBuildReq(t *testing.T) {
 	couchdbClient := couchDBClient{
 		client: &http.Client{},
 		cfg: &Config{
-			HTTPClientSettings: confighttp.HTTPClientSettings{
-				Endpoint: defaultEndpoint,
-			},
-			Username: "otelu",
-			Password: "otelp",
+			HTTPClientSettings: newHTTPConfig(defaultEndpoint),
+			Username:           "otelu",
+			Password:           "otelp",
 		},
 		logger: zap.NewNop(),
 	}
@@ -215,9 +217,7 @@ func TestBuildBadReq(t *testing.T) {
 	couchdbClient := couchDBClient{
 		client: &http.Client{},
 		cfg: &Config{
-			HTTPClientSettings: confighttp.HTTPClientSettings{
-				Endpoint: defaultEndpoint,
-			},
+			HTTPClientSettings: newHTTPConfig(defaultEndpoint),
 		},
 		logger: zap.NewNop(),
 	}

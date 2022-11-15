@@ -171,11 +171,14 @@ func TestResourceProcessor(t *testing.T) {
 				tt.detectorKeys = []string{"mock"}
 			}
 
+			httpConfig := confighttp.NewDefaultHTTPClientSettings()
+			httpConfig.Timeout = time.Second
+
 			cfg := &Config{
 				ProcessorSettings:  config.NewProcessorSettings(component.NewID(typeStr)),
 				Override:           tt.override,
 				Detectors:          tt.detectorKeys,
-				HTTPClientSettings: confighttp.HTTPClientSettings{Timeout: time.Second},
+				HTTPClientSettings: httpConfig,
 			}
 
 			// Test trace consumer

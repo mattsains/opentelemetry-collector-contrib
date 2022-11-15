@@ -38,6 +38,9 @@ func TestCreateDefaultConfig(t *testing.T) {
 	qs := exporterhelper.NewDefaultQueueSettings()
 	qs.Enabled = false
 
+	expectedHTTPConfig := confighttp.NewDefaultHTTPClientSettings()
+	expectedHTTPConfig.Timeout = 5 * time.Second
+
 	assert.Equal(t, cfg, &Config{
 		ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
 		CompressEncoding:   "gzip",
@@ -50,11 +53,9 @@ func TestCreateDefaultConfig(t *testing.T) {
 		Client:             "otelcol",
 		GraphiteTemplate:   "%{_metric_}",
 
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Timeout: 5 * time.Second,
-		},
-		RetrySettings: exporterhelper.NewDefaultRetrySettings(),
-		QueueSettings: qs,
+		HTTPClientSettings: expectedHTTPConfig,
+		RetrySettings:      exporterhelper.NewDefaultRetrySettings(),
+		QueueSettings:      qs,
 	})
 	assert.NoError(t, componenttest.CheckConfigStruct(cfg))
 }

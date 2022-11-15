@@ -48,6 +48,9 @@ func TestLoadConfig(t *testing.T) {
 	require.NoError(t, err)
 	defaultCfg.TranslationRules = defaultTranslationRules
 
+	expectedHTTPConfig := confighttp.NewDefaultHTTPClientSettings()
+	expectedHTTPConfig.Timeout = 5 * time.Second
+
 	tests := []struct {
 		id       component.ID
 		expected component.ExporterConfig
@@ -159,10 +162,7 @@ func TestLoadConfig(t *testing.T) {
 				},
 				DeltaTranslationTTL: 3600,
 				Correlation: &correlation.Config{
-					HTTPClientSettings: confighttp.HTTPClientSettings{
-						Endpoint: "",
-						Timeout:  5 * time.Second,
-					},
+					HTTPClientSettings:  expectedHTTPConfig,
 					StaleServiceTimeout: 5 * time.Minute,
 					SyncAttributes: map[string]string{
 						"k8s.pod.uid":  "k8s.pod.uid",

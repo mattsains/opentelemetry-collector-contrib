@@ -24,6 +24,8 @@ import (
 )
 
 func TestConfigValidation(t *testing.T) {
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Endpoint = "test_endpoint"
 	testcases := []struct {
 		name        string
 		cfg         *Config
@@ -32,64 +34,50 @@ func TestConfigValidation(t *testing.T) {
 		{
 			name: "invalid log format",
 			cfg: &Config{
-				LogFormat:        "test_format",
-				MetricFormat:     "carbon2",
-				CompressEncoding: "gzip",
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Timeout:  defaultTimeout,
-					Endpoint: "test_endpoint",
-				},
+				LogFormat:          "test_format",
+				MetricFormat:       "carbon2",
+				CompressEncoding:   "gzip",
+				HTTPClientSettings: httpConfig,
 			},
 			expectedErr: "unexpected log format: test_format",
 		},
 		{
 			name: "invalid metric format",
 			cfg: &Config{
-				LogFormat:    "json",
-				MetricFormat: "test_format",
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Timeout:  defaultTimeout,
-					Endpoint: "test_endpoint",
-				},
-				CompressEncoding: "gzip",
+				LogFormat:          "json",
+				MetricFormat:       "test_format",
+				HTTPClientSettings: httpConfig,
+				CompressEncoding:   "gzip",
 			},
 			expectedErr: "unexpected metric format: test_format",
 		},
 		{
 			name: "invalid compress encoding",
 			cfg: &Config{
-				LogFormat:        "json",
-				MetricFormat:     "carbon2",
-				CompressEncoding: "test_format",
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Timeout:  defaultTimeout,
-					Endpoint: "test_endpoint",
-				},
+				LogFormat:          "json",
+				MetricFormat:       "carbon2",
+				CompressEncoding:   "test_format",
+				HTTPClientSettings: httpConfig,
 			},
 			expectedErr: "unexpected compression encoding: test_format",
 		},
 		{
 			name: "invalid endpoint",
 			cfg: &Config{
-				LogFormat:        "json",
-				MetricFormat:     "carbon2",
-				CompressEncoding: "gzip",
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Timeout: defaultTimeout,
-				},
+				LogFormat:          "json",
+				MetricFormat:       "carbon2",
+				CompressEncoding:   "gzip",
+				HTTPClientSettings: confighttp.NewDefaultHTTPClientSettings(),
 			},
 			expectedErr: "endpoint is not set",
 		},
 		{
 			name: "invalid log format",
 			cfg: &Config{
-				LogFormat:        "json",
-				MetricFormat:     "carbon2",
-				CompressEncoding: "gzip",
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Timeout:  defaultTimeout,
-					Endpoint: "test_endpoint",
-				},
+				LogFormat:          "json",
+				MetricFormat:       "carbon2",
+				CompressEncoding:   "gzip",
+				HTTPClientSettings: httpConfig,
 				QueueSettings: exporterhelper.QueueSettings{
 					Enabled:   true,
 					QueueSize: -10,
@@ -100,13 +88,10 @@ func TestConfigValidation(t *testing.T) {
 		{
 			name: "valid config",
 			cfg: &Config{
-				LogFormat:        "json",
-				MetricFormat:     "carbon2",
-				CompressEncoding: "gzip",
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Timeout:  defaultTimeout,
-					Endpoint: "test_endpoint",
-				},
+				LogFormat:          "json",
+				MetricFormat:       "carbon2",
+				CompressEncoding:   "gzip",
+				HTTPClientSettings: httpConfig,
 			},
 			expectedErr: "",
 		},

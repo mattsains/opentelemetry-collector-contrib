@@ -38,6 +38,10 @@ func TestLoadConfig(t *testing.T) {
 	defaultCfg := createDefaultConfig().(*Config)
 	defaultCfg.Endpoint = "http://some.location.org:9411/api/v2/spans"
 
+	expectedHTTPConfig := confighttp.NewDefaultHTTPClientSettings()
+	expectedHTTPConfig.Endpoint = "https://somedest:1234/api/v2/spans"
+	expectedHTTPConfig.WriteBufferSize = 524288
+	expectedHTTPConfig.Timeout = 5 * time.Second
 	tests := []struct {
 		id       component.ID
 		expected component.ExporterConfig
@@ -61,11 +65,7 @@ func TestLoadConfig(t *testing.T) {
 					NumConsumers: 2,
 					QueueSize:    10,
 				},
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint:        "https://somedest:1234/api/v2/spans",
-					WriteBufferSize: 524288,
-					Timeout:         5 * time.Second,
-				},
+				HTTPClientSettings: expectedHTTPConfig,
 				Format:             "proto",
 				DefaultServiceName: "test_name",
 			},

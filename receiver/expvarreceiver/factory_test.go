@@ -42,6 +42,10 @@ func TestValidConfig(t *testing.T) {
 
 func TestCreateMetricsReceiver(t *testing.T) {
 	factory := NewFactory()
+
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Endpoint = defaultEndpoint
+
 	metricsReceiver, err := factory.CreateMetricsReceiver(
 		context.Background(),
 		componenttest.NewNopReceiverCreateSettings(),
@@ -49,10 +53,8 @@ func TestCreateMetricsReceiver(t *testing.T) {
 			ScraperControllerSettings: scraperhelper.ScraperControllerSettings{
 				CollectionInterval: 10 * time.Second,
 			},
-			HTTPClientSettings: confighttp.HTTPClientSettings{
-				Endpoint: defaultEndpoint,
-			},
-			MetricsConfig: metadata.DefaultMetricsSettings(),
+			HTTPClientSettings: httpConfig,
+			MetricsConfig:      metadata.DefaultMetricsSettings(),
 		},
 		consumertest.NewNop(),
 	)

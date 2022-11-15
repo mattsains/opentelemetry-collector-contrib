@@ -31,16 +31,18 @@ import (
 )
 
 func newElasticSearchHTTPClientSettings(elasticsearchMock *httptest.Server) confighttp.HTTPClientSettings {
+	return newHTTPConfig(elasticsearchMock.URL)
+}
+
+func newHTTPConfig(endpoint string) confighttp.HTTPClientSettings {
 	httpConfig := confighttp.NewDefaultHTTPClientSettings()
-	httpConfig.Endpoint = elasticsearchMock.URL
+	httpConfig.Endpoint = endpoint
 	return httpConfig
 }
 
 func TestCreateClientInvalidEndpoint(t *testing.T) {
 	_, err := newElasticsearchClient(componenttest.NewNopTelemetrySettings(), Config{
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: "http://\x00",
-		},
+		HTTPClientSettings: newHTTPConfig("http://\x00"),
 	}, componenttest.NewNopHost())
 	require.Error(t, err)
 }
@@ -305,9 +307,7 @@ func TestMetadataNoAuthorization(t *testing.T) {
 
 func TestDoRequestBadPath(t *testing.T) {
 	client, err := newElasticsearchClient(componenttest.NewNopTelemetrySettings(), Config{
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: "http://example.localhost:9200",
-		},
+		HTTPClientSettings: newHTTPConfig("http://example.localhost:9200"),
 	}, componenttest.NewNopHost())
 	require.NoError(t, err)
 
@@ -317,9 +317,7 @@ func TestDoRequestBadPath(t *testing.T) {
 
 func TestDoRequestClientTimeout(t *testing.T) {
 	client, err := newElasticsearchClient(componenttest.NewNopTelemetrySettings(), Config{
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: "http://example.localhost:9200",
-		},
+		HTTPClientSettings: newHTTPConfig("http://example.localhost:9200"),
 	}, componenttest.NewNopHost())
 	require.NoError(t, err)
 

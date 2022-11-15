@@ -35,6 +35,24 @@ func TestLoadConfig(t *testing.T) {
 	cm, err := confmaptest.LoadConf(filepath.Join("testdata", "config.yaml"))
 	require.NoError(t, err)
 
+	partialTLSSettingsHTTPConfig := confighttp.NewDefaultHTTPClientSettings()
+	partialTLSSettingsHTTPConfig.Endpoint = "localhost:1234"
+
+	partialSettingsHTTPConfig := partialTLSSettingsHTTPConfig
+	partialSettingsHTTPConfig.TLSSetting = configtls.TLSClientSetting{
+		Insecure: true,
+	}
+
+	allSettingsHTTPConfig := partialTLSSettingsHTTPConfig
+	allSettingsHTTPConfig.TLSSetting = configtls.TLSClientSetting{
+		TLSSetting: configtls.TLSSetting{
+			CAFile:   "path",
+			CertFile: "path",
+			KeyFile:  "path",
+		},
+		InsecureSkipVerify: true,
+	}
+
 	tests := []struct {
 		id       component.ID
 		expected component.ReceiverConfig
@@ -46,18 +64,8 @@ func TestLoadConfig(t *testing.T) {
 		{
 			id: component.NewIDWithName(typeStr, "all_settings"),
 			expected: &Config{
-				ReceiverSettings: config.NewReceiverSettings(component.NewID(typeStr)),
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "localhost:1234",
-					TLSSetting: configtls.TLSClientSetting{
-						TLSSetting: configtls.TLSSetting{
-							CAFile:   "path",
-							CertFile: "path",
-							KeyFile:  "path",
-						},
-						InsecureSkipVerify: true,
-					},
-				},
+				ReceiverSettings:   config.NewReceiverSettings(component.NewID(typeStr)),
+				HTTPClientSettings: allSettingsHTTPConfig,
 				CollectionInterval: 30 * time.Second,
 				MetricsPath:        "/v2/metrics",
 				Params:             url.Values{"columns": []string{"name", "messages"}, "key": []string{"foo", "bar"}},
@@ -67,13 +75,8 @@ func TestLoadConfig(t *testing.T) {
 		{
 			id: component.NewIDWithName(typeStr, "partial_settings"),
 			expected: &Config{
-				ReceiverSettings: config.NewReceiverSettings(component.NewID(typeStr)),
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "localhost:1234",
-					TLSSetting: configtls.TLSClientSetting{
-						Insecure: true,
-					},
-				},
+				ReceiverSettings:   config.NewReceiverSettings(component.NewID(typeStr)),
+				HTTPClientSettings: partialSettingsHTTPConfig,
 				CollectionInterval: 30 * time.Second,
 				MetricsPath:        "/metrics",
 			},
@@ -81,10 +84,8 @@ func TestLoadConfig(t *testing.T) {
 		{
 			id: component.NewIDWithName(typeStr, "partial_tls_settings"),
 			expected: &Config{
-				ReceiverSettings: config.NewReceiverSettings(component.NewID(typeStr)),
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "localhost:1234",
-				},
+				ReceiverSettings:   config.NewReceiverSettings(component.NewID(typeStr)),
+				HTTPClientSettings: partialTLSSettingsHTTPConfig,
 				CollectionInterval: 30 * time.Second,
 				MetricsPath:        "/metrics",
 			},

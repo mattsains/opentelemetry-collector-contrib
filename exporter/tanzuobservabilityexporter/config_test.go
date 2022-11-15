@@ -29,6 +29,12 @@ import (
 	"go.opentelemetry.io/collector/service/servicetest"
 )
 
+func newHTTPConfig(endpoint string) confighttp.HTTPClientSettings {
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Endpoint = endpoint
+	return httpConfig
+}
+
 func TestLoadConfig(t *testing.T) {
 	factories, err := componenttest.NopFactories()
 	require.NoError(t, err)
@@ -45,10 +51,10 @@ func TestLoadConfig(t *testing.T) {
 	expected := &Config{
 		ExporterSettings: config.NewExporterSettings(component.NewID("tanzuobservability")),
 		Traces: TracesConfig{
-			HTTPClientSettings: confighttp.HTTPClientSettings{Endpoint: "http://localhost:40001"},
+			HTTPClientSettings: newHTTPConfig("http://localhost:40001"),
 		},
 		Metrics: MetricsConfig{
-			HTTPClientSettings:    confighttp.HTTPClientSettings{Endpoint: "http://localhost:2916"},
+			HTTPClientSettings:    newHTTPConfig("http://localhost:2916"),
 			ResourceAttrsIncluded: true,
 			AppTagsExcluded:       true,
 		},
@@ -70,7 +76,7 @@ func TestLoadConfig(t *testing.T) {
 func TestConfigRequiresValidEndpointUrl(t *testing.T) {
 	c := &Config{
 		Traces: TracesConfig{
-			HTTPClientSettings: confighttp.HTTPClientSettings{Endpoint: "http#$%^&#$%&#"},
+			HTTPClientSettings: newHTTPConfig("http#$%^&#$%&#"),
 		},
 	}
 	assert.Error(t, c.Validate())
@@ -79,7 +85,7 @@ func TestConfigRequiresValidEndpointUrl(t *testing.T) {
 func TestMetricsConfigRequiresValidEndpointUrl(t *testing.T) {
 	c := &Config{
 		Metrics: MetricsConfig{
-			HTTPClientSettings: confighttp.HTTPClientSettings{Endpoint: "http#$%^&#$%&#"},
+			HTTPClientSettings: newHTTPConfig("http#$%^&#$%&#"),
 		},
 	}
 
@@ -89,10 +95,10 @@ func TestMetricsConfigRequiresValidEndpointUrl(t *testing.T) {
 func TestDifferentHostNames(t *testing.T) {
 	c := &Config{
 		Traces: TracesConfig{
-			HTTPClientSettings: confighttp.HTTPClientSettings{Endpoint: "http://localhost:30001"},
+			HTTPClientSettings: newHTTPConfig("http://localhost:30001"),
 		},
 		Metrics: MetricsConfig{
-			HTTPClientSettings: confighttp.HTTPClientSettings{Endpoint: "http://foo.com:2878"},
+			HTTPClientSettings: newHTTPConfig("http://foo.com:2878"),
 		},
 	}
 	assert.Error(t, c.Validate())
@@ -101,10 +107,10 @@ func TestDifferentHostNames(t *testing.T) {
 func TestConfigNormal(t *testing.T) {
 	c := &Config{
 		Traces: TracesConfig{
-			HTTPClientSettings: confighttp.HTTPClientSettings{Endpoint: "http://localhost:40001"},
+			HTTPClientSettings: newHTTPConfig("http://localhost:40001"),
 		},
 		Metrics: MetricsConfig{
-			HTTPClientSettings: confighttp.HTTPClientSettings{Endpoint: "http://localhost:2916"},
+			HTTPClientSettings: newHTTPConfig("http://localhost:2916"),
 		},
 	}
 	assert.NoError(t, c.Validate())

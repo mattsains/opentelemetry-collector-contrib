@@ -36,7 +36,7 @@ func Test_createDefaultConfig(t *testing.T) {
 func Test_createMetricsExporter(t *testing.T) {
 
 	invalidConfig := createDefaultConfig().(*Config)
-	invalidConfig.HTTPClientSettings = confighttp.HTTPClientSettings{}
+	invalidConfig.HTTPClientSettings = confighttp.NewDefaultHTTPClientSettings()
 	invalidTLSConfig := createDefaultConfig().(*Config)
 	invalidTLSConfig.HTTPClientSettings.TLSSetting = configtls.TLSClientSetting{
 		TLSSetting: configtls.TLSSetting{

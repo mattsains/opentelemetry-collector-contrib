@@ -37,6 +37,18 @@ import (
 )
 
 func TestScraperStart(t *testing.T) {
+	invalidHTTPConfig := confighttp.NewDefaultHTTPClientSettings()
+	invalidHTTPConfig.Endpoint = defaultEndpoint
+	invalidHTTPConfig.TLSSetting = configtls.TLSClientSetting{
+		TLSSetting: configtls.TLSSetting{
+			CAFile: "/non/existent",
+		},
+	}
+
+	validHTTPConfig := confighttp.NewDefaultHTTPClientSettings()
+	validHTTPConfig.Endpoint = defaultEndpoint
+	validHTTPConfig.TLSSetting = configtls.TLSClientSetting{}
+
 	testcases := []struct {
 		desc        string
 		scraper     *bigipScraper
@@ -46,14 +58,7 @@ func TestScraperStart(t *testing.T) {
 			desc: "Bad Config",
 			scraper: &bigipScraper{
 				cfg: &Config{
-					HTTPClientSettings: confighttp.HTTPClientSettings{
-						Endpoint: defaultEndpoint,
-						TLSSetting: configtls.TLSClientSetting{
-							TLSSetting: configtls.TLSSetting{
-								CAFile: "/non/existent",
-							},
-						},
-					},
+					HTTPClientSettings: invalidHTTPConfig,
 				},
 				settings: componenttest.NewNopTelemetrySettings(),
 			},
@@ -63,10 +68,7 @@ func TestScraperStart(t *testing.T) {
 			desc: "Valid Config",
 			scraper: &bigipScraper{
 				cfg: &Config{
-					HTTPClientSettings: confighttp.HTTPClientSettings{
-						TLSSetting: configtls.TLSClientSetting{},
-						Endpoint:   defaultEndpoint,
-					},
+					HTTPClientSettings: validHTTPConfig,
 				},
 				settings: componenttest.NewNopTelemetrySettings(),
 			},

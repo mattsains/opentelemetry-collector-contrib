@@ -28,6 +28,12 @@ import (
 )
 
 func TestValidate(t *testing.T) {
+	invalidHTTPConfig := confighttp.NewDefaultHTTPClientSettings()
+	invalidHTTPConfig.Endpoint = "http://localhost :5984"
+
+	validHTTPConfig := confighttp.NewDefaultHTTPClientSettings()
+	validHTTPConfig.Endpoint = "http://localhost:5984"
+
 	testCases := []struct {
 		desc        string
 		cfg         *Config
@@ -35,11 +41,7 @@ func TestValidate(t *testing.T) {
 	}{
 		{
 			desc: "missing username, password and invalid endpoint",
-			cfg: &Config{
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "http://localhost :5984",
-				},
-			},
+			cfg:  &Config{HTTPClientSettings: invalidHTTPConfig},
 			expectedErr: multierr.Combine(
 				errMissingUsername,
 				errMissingPassword,
@@ -49,10 +51,8 @@ func TestValidate(t *testing.T) {
 		{
 			desc: "missing password and invalid endpoint",
 			cfg: &Config{
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "http://localhost :5984",
-				},
-				Username: "otelu",
+				HTTPClientSettings: invalidHTTPConfig,
+				Username:           "otelu",
 			},
 			expectedErr: multierr.Combine(
 				errMissingPassword,
@@ -62,10 +62,8 @@ func TestValidate(t *testing.T) {
 		{
 			desc: "missing username and invalid endpoint",
 			cfg: &Config{
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "http://localhost :5984",
-				},
-				Password: "otelp",
+				HTTPClientSettings: invalidHTTPConfig,
+				Password:           "otelp",
 			},
 			expectedErr: multierr.Combine(
 				errMissingUsername,
@@ -75,22 +73,18 @@ func TestValidate(t *testing.T) {
 		{
 			desc: "invalid endpoint",
 			cfg: &Config{
-				Username: "otel",
-				Password: "otel",
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "http://localhost :5984",
-				},
+				Username:           "otel",
+				Password:           "otel",
+				HTTPClientSettings: invalidHTTPConfig,
 			},
 			expectedErr: fmt.Errorf(errInvalidEndpoint.Error(), "parse \"http://localhost :5984\": invalid character \" \" in host name"),
 		},
 		{
 			desc: "no error",
 			cfg: &Config{
-				Username: "otel",
-				Password: "otel",
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "http://localhost:5984",
-				},
+				Username:           "otel",
+				Password:           "otel",
+				HTTPClientSettings: validHTTPConfig,
 			},
 			expectedErr: nil,
 		},

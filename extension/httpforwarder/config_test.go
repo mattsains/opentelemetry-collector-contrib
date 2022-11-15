@@ -30,6 +30,13 @@ import (
 func TestLoadConfig(t *testing.T) {
 	t.Parallel()
 
+	expectedHTTPConfig := confighttp.NewDefaultHTTPClientSettings()
+	expectedHTTPConfig.Endpoint = "http://target"
+	expectedHTTPConfig.Headers = map[string]string{
+		"otel_http_forwarder": "dev",
+	}
+	expectedHTTPConfig.Timeout = 5 * time.Second
+
 	tests := []struct {
 		id       component.ID
 		expected component.ExtensionConfig
@@ -45,13 +52,7 @@ func TestLoadConfig(t *testing.T) {
 				Ingress: confighttp.HTTPServerSettings{
 					Endpoint: "http://localhost:7070",
 				},
-				Egress: confighttp.HTTPClientSettings{
-					Endpoint: "http://target/",
-					Headers: map[string]string{
-						"otel_http_forwarder": "dev",
-					},
-					Timeout: 5 * time.Second,
-				},
+				Egress: expectedHTTPConfig,
 			},
 		},
 	}

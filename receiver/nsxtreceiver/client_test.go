@@ -24,7 +24,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/component/componenttest"
-	"go.opentelemetry.io/collector/config/confighttp"
 	"go.uber.org/zap"
 )
 
@@ -37,9 +36,7 @@ const (
 
 func TestNewClientFailureToParse(t *testing.T) {
 	_, err := newClient(&Config{
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: "http://\x00",
-		},
+		HTTPClientSettings: newHTTPConfig("http://\x00"),
 	}, componenttest.NewNopTelemetrySettings(), componenttest.NewNopHost(), zap.NewNop())
 	require.Error(t, err)
 }
@@ -47,9 +44,7 @@ func TestNewClientFailureToParse(t *testing.T) {
 func TestTransportNodes(t *testing.T) {
 	nsxMock := mockServer(t)
 	client, err := newClient(&Config{
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: nsxMock.URL,
-		},
+		HTTPClientSettings: newHTTPConfig(nsxMock.URL),
 	}, componenttest.NewNopTelemetrySettings(), componenttest.NewNopHost(), zap.NewNop())
 	require.NoError(t, err)
 	nodes, err := client.TransportNodes(context.Background())
@@ -60,9 +55,7 @@ func TestTransportNodes(t *testing.T) {
 func TestClusterNodes(t *testing.T) {
 	nsxMock := mockServer(t)
 	client, err := newClient(&Config{
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: nsxMock.URL,
-		},
+		HTTPClientSettings: newHTTPConfig(nsxMock.URL),
 	}, componenttest.NewNopTelemetrySettings(), componenttest.NewNopHost(), zap.NewNop())
 	require.NoError(t, err)
 	nodes, err := client.ClusterNodes(context.Background())
@@ -73,9 +66,7 @@ func TestClusterNodes(t *testing.T) {
 func TestClusterNodeInterface(t *testing.T) {
 	nsxMock := mockServer(t)
 	client, err := newClient(&Config{
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: nsxMock.URL,
-		},
+		HTTPClientSettings: newHTTPConfig(nsxMock.URL),
 	}, componenttest.NewNopTelemetrySettings(), componenttest.NewNopHost(), zap.NewNop())
 	require.NoError(t, err)
 	iFaces, err := client.Interfaces(context.Background(), managerNode1, managerClass)
@@ -86,9 +77,7 @@ func TestClusterNodeInterface(t *testing.T) {
 func TestTransportNodeInterface(t *testing.T) {
 	nsxMock := mockServer(t)
 	client, err := newClient(&Config{
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: nsxMock.URL,
-		},
+		HTTPClientSettings: newHTTPConfig(nsxMock.URL),
 	}, componenttest.NewNopTelemetrySettings(), componenttest.NewNopHost(), zap.NewNop())
 	require.NoError(t, err)
 	iFaces, err := client.Interfaces(context.Background(), transportNode1, transportClass)
@@ -99,9 +88,7 @@ func TestTransportNodeInterface(t *testing.T) {
 func TestTransportNodeStatus(t *testing.T) {
 	nsxMock := mockServer(t)
 	client, err := newClient(&Config{
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: nsxMock.URL,
-		},
+		HTTPClientSettings: newHTTPConfig(nsxMock.URL),
 	}, componenttest.NewNopTelemetrySettings(), componenttest.NewNopHost(), zap.NewNop())
 	require.NoError(t, err)
 	transportStatus, err := client.NodeStatus(context.Background(), transportNode1, transportClass)
@@ -112,9 +99,7 @@ func TestTransportNodeStatus(t *testing.T) {
 func TestClusterNodeStatus(t *testing.T) {
 	nsxMock := mockServer(t)
 	client, err := newClient(&Config{
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: nsxMock.URL,
-		},
+		HTTPClientSettings: newHTTPConfig(nsxMock.URL),
 	}, componenttest.NewNopTelemetrySettings(), componenttest.NewNopHost(), zap.NewNop())
 	require.NoError(t, err)
 	transportStatus, err := client.NodeStatus(context.Background(), managerNode1, managerClass)
@@ -125,9 +110,7 @@ func TestClusterNodeStatus(t *testing.T) {
 func TestTransportNodeInterfaceStatus(t *testing.T) {
 	nsxMock := mockServer(t)
 	client, err := newClient(&Config{
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: nsxMock.URL,
-		},
+		HTTPClientSettings: newHTTPConfig(nsxMock.URL),
 	}, componenttest.NewNopTelemetrySettings(), componenttest.NewNopHost(), zap.NewNop())
 	require.NoError(t, err)
 	iStats, err := client.InterfaceStatus(context.Background(), transportNode1, transportNodeNic1, transportClass)
@@ -138,9 +121,7 @@ func TestTransportNodeInterfaceStatus(t *testing.T) {
 func TestManagerNodeInterfaceStatus(t *testing.T) {
 	nsxMock := mockServer(t)
 	client, err := newClient(&Config{
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: nsxMock.URL,
-		},
+		HTTPClientSettings: newHTTPConfig(nsxMock.URL),
 	}, componenttest.NewNopTelemetrySettings(), componenttest.NewNopHost(), zap.NewNop())
 	require.NoError(t, err)
 	iStats, err := client.InterfaceStatus(context.Background(), managerNode1, managerNodeNic1, managerClass)
@@ -151,9 +132,7 @@ func TestManagerNodeInterfaceStatus(t *testing.T) {
 func TestDoRequestBadUrl(t *testing.T) {
 	nsxMock := mockServer(t)
 	client, err := newClient(&Config{
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: nsxMock.URL,
-		},
+		HTTPClientSettings: newHTTPConfig(nsxMock.URL),
 	}, componenttest.NewNopTelemetrySettings(), componenttest.NewNopHost(), zap.NewNop())
 	require.NoError(t, err)
 
@@ -164,10 +143,8 @@ func TestDoRequestBadUrl(t *testing.T) {
 func TestPermissionDenied_ClusterNodes(t *testing.T) {
 	nsxMock := mockServer(t)
 	client, err := newClient(&Config{
-		Password: badPassword,
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: nsxMock.URL,
-		},
+		Password:           badPassword,
+		HTTPClientSettings: newHTTPConfig(nsxMock.URL),
 	}, componenttest.NewNopTelemetrySettings(), componenttest.NewNopHost(), zap.NewNop())
 	require.NoError(t, err)
 
@@ -178,10 +155,8 @@ func TestPermissionDenied_ClusterNodes(t *testing.T) {
 func TestPermissionDenied_Interfaces(t *testing.T) {
 	nsxMock := mockServer(t)
 	client, err := newClient(&Config{
-		Password: badPassword,
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: nsxMock.URL,
-		},
+		Password:           badPassword,
+		HTTPClientSettings: newHTTPConfig(nsxMock.URL),
 	}, componenttest.NewNopTelemetrySettings(), componenttest.NewNopHost(), zap.NewNop())
 	require.NoError(t, err)
 
@@ -192,10 +167,8 @@ func TestPermissionDenied_Interfaces(t *testing.T) {
 func TestPermissionDenied_InterfaceStatus(t *testing.T) {
 	nsxMock := mockServer(t)
 	client, err := newClient(&Config{
-		Password: badPassword,
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: nsxMock.URL,
-		},
+		Password:           badPassword,
+		HTTPClientSettings: newHTTPConfig(nsxMock.URL),
 	}, componenttest.NewNopTelemetrySettings(), componenttest.NewNopHost(), zap.NewNop())
 	require.NoError(t, err)
 
@@ -206,10 +179,8 @@ func TestPermissionDenied_InterfaceStatus(t *testing.T) {
 func TestPermissionDenied_NodeStatus(t *testing.T) {
 	nsxMock := mockServer(t)
 	client, err := newClient(&Config{
-		Password: badPassword,
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: nsxMock.URL,
-		},
+		Password:           badPassword,
+		HTTPClientSettings: newHTTPConfig(nsxMock.URL),
 	}, componenttest.NewNopTelemetrySettings(), componenttest.NewNopHost(), zap.NewNop())
 	require.NoError(t, err)
 
@@ -220,10 +191,8 @@ func TestPermissionDenied_NodeStatus(t *testing.T) {
 func TestPermissionDenied_TransportNodes(t *testing.T) {
 	nsxMock := mockServer(t)
 	client, err := newClient(&Config{
-		Password: badPassword,
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: nsxMock.URL,
-		},
+		Password:           badPassword,
+		HTTPClientSettings: newHTTPConfig(nsxMock.URL),
 	}, componenttest.NewNopTelemetrySettings(), componenttest.NewNopHost(), zap.NewNop())
 	require.NoError(t, err)
 
@@ -234,10 +203,8 @@ func TestPermissionDenied_TransportNodes(t *testing.T) {
 func TestInternalServerError(t *testing.T) {
 	nsxMock := mockServer(t)
 	client, err := newClient(&Config{
-		Username: user500,
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: nsxMock.URL,
-		},
+		Username:           user500,
+		HTTPClientSettings: newHTTPConfig(nsxMock.URL),
 	}, componenttest.NewNopTelemetrySettings(), componenttest.NewNopHost(), zap.NewNop())
 	require.NoError(t, err)
 

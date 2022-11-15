@@ -41,28 +41,28 @@ func LogRecordsToLogs(records []plog.LogRecord) plog.Logs {
 	return logs
 }
 
+func newTestHTTPConfig() confighttp.HTTPClientSettings {
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Endpoint = "test_endpoint"
+	return httpConfig
+}
+
 func TestInitExporter(t *testing.T) {
 	_, err := initExporter(&Config{
-		LogFormat:        "json",
-		MetricFormat:     "carbon2",
-		CompressEncoding: "gzip",
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Timeout:  defaultTimeout,
-			Endpoint: "test_endpoint",
-		},
+		LogFormat:          "json",
+		MetricFormat:       "carbon2",
+		CompressEncoding:   "gzip",
+		HTTPClientSettings: newTestHTTPConfig(),
 	}, componenttest.NewNopTelemetrySettings())
 	assert.NoError(t, err)
 }
 
 func TestInitExporterInvalidConfig(t *testing.T) {
 	_, err := initExporter(&Config{
-		LogFormat:    "json",
-		MetricFormat: "test_format",
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Timeout:  defaultTimeout,
-			Endpoint: "test_endpoint",
-		},
-		CompressEncoding: "gzip",
+		LogFormat:          "json",
+		MetricFormat:       "test_format",
+		HTTPClientSettings: newTestHTTPConfig(),
+		CompressEncoding:   "gzip",
 	}, componenttest.NewNopTelemetrySettings())
 
 	assert.EqualError(t, err, "unexpected metric format: test_format")
@@ -164,29 +164,25 @@ func TestPartiallyFailed(t *testing.T) {
 
 func TestInvalidSourceFormats(t *testing.T) {
 	_, err := initExporter(&Config{
-		LogFormat:        "json",
-		MetricFormat:     "carbon2",
-		CompressEncoding: "gzip",
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Timeout:  defaultTimeout,
-			Endpoint: "test_endpoint",
-		},
+		LogFormat:          "json",
+		MetricFormat:       "carbon2",
+		CompressEncoding:   "gzip",
+		HTTPClientSettings: newTestHTTPConfig(),
 		MetadataAttributes: []string{"[a-z"},
 	}, componenttest.NewNopTelemetrySettings())
 	assert.EqualError(t, err, "error parsing regexp: missing closing ]: `[a-z`")
 }
 
 func TestInvalidHTTPCLient(t *testing.T) {
+	erroringHTTPConfig := newTestHTTPConfig()
+	erroringHTTPConfig.CustomRoundTripper = func(next http.RoundTripper) (http.RoundTripper, error) {
+		return nil, errors.New("roundTripperException")
+	}
 	se, err := initExporter(&Config{
-		LogFormat:        "json",
-		MetricFormat:     "carbon2",
-		CompressEncoding: "gzip",
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: "test_endpoint",
-			CustomRoundTripper: func(next http.RoundTripper) (http.RoundTripper, error) {
-				return nil, errors.New("roundTripperException")
-			},
-		},
+		LogFormat:          "json",
+		MetricFormat:       "carbon2",
+		CompressEncoding:   "gzip",
+		HTTPClientSettings: erroringHTTPConfig,
 	}, componenttest.NewNopTelemetrySettings())
 	require.NoError(t, err)
 	require.NotNil(t, se)
