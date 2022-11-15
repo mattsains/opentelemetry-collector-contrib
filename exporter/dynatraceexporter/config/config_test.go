@@ -23,6 +23,12 @@ import (
 	"go.opentelemetry.io/collector/exporter/exporterhelper"
 )
 
+func NewDefaultHTTPClientSettingsWithEndpoint(endpoint string) confighttp.HTTPClientSettings {
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Endpoint = endpoint
+	return httpConfig
+}
+
 func TestConfig_Validate(t *testing.T) {
 	t.Run("Empty configuration", func(t *testing.T) {
 		c := &Config{}
@@ -33,7 +39,7 @@ func TestConfig_Validate(t *testing.T) {
 	})
 
 	t.Run("Valid configuration", func(t *testing.T) {
-		c := &Config{HTTPClientSettings: confighttp.HTTPClientSettings{Endpoint: "http://example.com/"}, APIToken: "token"}
+		c := &Config{HTTPClientSettings: NewDefaultHTTPClientSettingsWithEndpoint("http://example.com/"), APIToken: "token"}
 		err := c.Validate()
 		assert.NoError(t, err)
 
@@ -41,7 +47,7 @@ func TestConfig_Validate(t *testing.T) {
 	})
 
 	t.Run("Invalid Endpoint", func(t *testing.T) {
-		c := &Config{HTTPClientSettings: confighttp.HTTPClientSettings{Endpoint: "example.com"}}
+		c := &Config{HTTPClientSettings: NewDefaultHTTPClientSettingsWithEndpoint("example.com")}
 		err := c.Validate()
 		assert.Error(t, err)
 	})

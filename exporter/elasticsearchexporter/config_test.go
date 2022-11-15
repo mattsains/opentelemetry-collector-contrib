@@ -26,6 +26,20 @@ import (
 	"go.opentelemetry.io/collector/confmap/confmaptest"
 )
 
+func newExpectedHTTPClientSettings() confighttp.HTTPClientSettings {
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Authentication = AuthenticationSettings{
+		User:     "elastic",
+		Password: "search",
+		APIKey:   "AvFsEiPs==",
+	}
+	httpConfig.Timeout = 2 * time.Minute
+	httpConfig.Headers = map[string]string{
+		"myheader": "test",
+	}
+	return httpConfig
+}
+
 func TestLoad_DeprecatedIndexConfigOption(t *testing.T) {
 	cm, err := confmaptest.LoadConf(filepath.Join("testdata", "config-use-deprecated-index_option.yaml"))
 	require.NoError(t, err)
@@ -37,24 +51,14 @@ func TestLoad_DeprecatedIndexConfigOption(t *testing.T) {
 	require.NoError(t, component.UnmarshalExporterConfig(sub, cfg))
 
 	assert.Equal(t, cfg, &Config{
-		ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-		Endpoints:        []string{"http://localhost:9200"},
-		CloudID:          "TRNMxjXlNJEt",
-		Index:            "my_log_index",
-		LogsIndex:        "logs-generic-default",
-		TracesIndex:      "traces-generic-default",
-		Pipeline:         "mypipeline",
-		HTTPClientSettings: HTTPClientSettings{
-			Authentication: AuthenticationSettings{
-				User:     "elastic",
-				Password: "search",
-				APIKey:   "AvFsEiPs==",
-			},
-			Timeout: 2 * time.Minute,
-			Headers: map[string]string{
-				"myheader": "test",
-			},
-		},
+		ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+		Endpoints:          []string{"http://localhost:9200"},
+		CloudID:            "TRNMxjXlNJEt",
+		Index:              "my_log_index",
+		LogsIndex:          "logs-generic-default",
+		TracesIndex:        "traces-generic-default",
+		Pipeline:           "mypipeline",
+		HTTPClientSettings: newExpectedHTTPClientSettings,
 		Discovery: DiscoverySettings{
 			OnStart: true,
 		},
@@ -95,24 +99,14 @@ func TestLoadConfig(t *testing.T) {
 		{
 			id: component.NewIDWithName(typeStr, "trace"),
 			expected: &Config{
-				ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-				Endpoints:        []string{"https://elastic.example.com:9200"},
-				CloudID:          "TRNMxjXlNJEt",
-				Index:            "",
-				LogsIndex:        "logs-generic-default",
-				TracesIndex:      "trace_index",
-				Pipeline:         "mypipeline",
-				HTTPClientSettings: HTTPClientSettings{
-					Authentication: AuthenticationSettings{
-						User:     "elastic",
-						Password: "search",
-						APIKey:   "AvFsEiPs==",
-					},
-					Timeout: 2 * time.Minute,
-					Headers: map[string]string{
-						"myheader": "test",
-					},
-				},
+				ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+				Endpoints:          []string{"https://elastic.example.com:9200"},
+				CloudID:            "TRNMxjXlNJEt",
+				Index:              "",
+				LogsIndex:          "logs-generic-default",
+				TracesIndex:        "trace_index",
+				Pipeline:           "mypipeline",
+				HTTPClientSettings: newExpectedHTTPClientSettings(),
 				Discovery: DiscoverySettings{
 					OnStart: true,
 				},
@@ -135,24 +129,14 @@ func TestLoadConfig(t *testing.T) {
 		{
 			id: component.NewIDWithName(typeStr, "log"),
 			expected: &Config{
-				ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-				Endpoints:        []string{"http://localhost:9200"},
-				CloudID:          "TRNMxjXlNJEt",
-				Index:            "",
-				LogsIndex:        "my_log_index",
-				TracesIndex:      "traces-generic-default",
-				Pipeline:         "mypipeline",
-				HTTPClientSettings: HTTPClientSettings{
-					Authentication: AuthenticationSettings{
-						User:     "elastic",
-						Password: "search",
-						APIKey:   "AvFsEiPs==",
-					},
-					Timeout: 2 * time.Minute,
-					Headers: map[string]string{
-						"myheader": "test",
-					},
-				},
+				ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+				Endpoints:          []string{"http://localhost:9200"},
+				CloudID:            "TRNMxjXlNJEt",
+				Index:              "",
+				LogsIndex:          "my_log_index",
+				TracesIndex:        "traces-generic-default",
+				Pipeline:           "mypipeline",
+				HTTPClientSettings: newExpectedHTTPClientSettings(),
 				Discovery: DiscoverySettings{
 					OnStart: true,
 				},

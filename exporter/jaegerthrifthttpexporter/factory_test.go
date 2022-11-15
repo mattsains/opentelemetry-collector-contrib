@@ -54,16 +54,17 @@ func TestCreateInstanceViaFactory(t *testing.T) {
 }
 
 func TestFactory_CreateTracesExporter(t *testing.T) {
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Endpoint = "http://jaeger.example.com/api/traces"
+	httpConfig.Headers = map[string]string{
+		"added-entry": "added value",
+		"dot.test":    "test",
+	}
+	httpConfig.Timeout = 2 * time.Second
+
 	config := &Config{
-		ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: "http://jaeger.example.com/api/traces",
-			Headers: map[string]string{
-				"added-entry": "added value",
-				"dot.test":    "test",
-			},
-			Timeout: 2 * time.Second,
-		},
+		ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+		HTTPClientSettings: httpConfig,
 	}
 
 	params := componenttest.NewNopExporterCreateSettings()
@@ -73,6 +74,13 @@ func TestFactory_CreateTracesExporter(t *testing.T) {
 }
 
 func TestFactory_CreateTracesExporterFails(t *testing.T) {
+	httpConfigWithInvalidURL := confighttp.NewDefaultHTTPClientSettings()
+	httpConfigWithInvalidURL.Endpoint = ".example:123"
+
+	httpConfigWithNegativeDuration := confighttp.NewDefaultHTTPClientSettings()
+	httpConfigWithNegativeDuration.Endpoint = "example.com:123"
+	httpConfigWithNegativeDuration.Timeout = -2 * time.Second
+
 	tests := []struct {
 		name         string
 		config       *Config
@@ -89,9 +97,7 @@ func TestFactory_CreateTracesExporterFails(t *testing.T) {
 			name: "invalid_url",
 			config: &Config{
 				ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: ".example:123",
-				},
+				HTTPClientSettings: httpConfigWithInvalidURL,
 			},
 			errorMessage: "\"jaeger_thrift\" config requires a valid \"endpoint\": parse \".example:123\": invalid URI for request",
 		},
@@ -99,11 +105,7 @@ func TestFactory_CreateTracesExporterFails(t *testing.T) {
 			name: "negative_duration",
 			config: &Config{
 				ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "example.com:123",
-					Timeout:  -2 * time.Second,
-				},
-			},
+				HTTPClientSettings: httpConfigWithNegativeDuration,
 			errorMessage: "\"jaeger_thrift\" config requires a positive value for \"timeout\"",
 		},
 	}

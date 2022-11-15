@@ -31,13 +31,14 @@ import (
 const testHTTPAddress = "http://a.example.com:123/at/some/path"
 
 func TestNew(t *testing.T) {
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Endpoint = testHTTPAddress
+	httpConfig.Headers = map[string]string{"test": "test"}
+	httpConfig.Timeout = 10 * time.Nanosecond
+
 	config := Config{
-		ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: testHTTPAddress,
-			Headers:  map[string]string{"test": "test"},
-			Timeout:  10 * time.Nanosecond,
-		},
+		ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+		HTTPClientSettings: httpConfig,
 	}
 
 	got, err := newTracesExporter(&config, componenttest.NewNopExporterCreateSettings())

@@ -52,6 +52,13 @@ func TestCreateDefaultConfig(t *testing.T) {
 	assert.NoError(t, componenttest.CheckConfigStruct(cfg))
 }
 
+func httpClientSettingsWith(endpoint string, headers map[string]string) confighttp.HTTPClientSettings {
+	settings := confighttp.NewDefaultHTTPClientSettings()
+	settings.Endpoint = endpoint
+	settings.Headers = headers
+	return settings
+}
+
 func TestLoadConfig(t *testing.T) {
 	t.Parallel()
 
@@ -70,12 +77,12 @@ func TestLoadConfig(t *testing.T) {
 				RetrySettings:    exporterhelper.NewDefaultRetrySettings(),
 				QueueSettings:    exporterhelper.NewDefaultQueueSettings(),
 
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: apiconstants.GetDefaultOneAgentEndpoint(),
-					Headers: map[string]string{
+				HTTPClientSettings: httpClientSettingsWith(
+					apiconstants.GetDefaultOneAgentEndpoint(),
+					map[string]string{
 						"Content-Type": "text/plain; charset=UTF-8",
 						"User-Agent":   "opentelemetry-collector"},
-				},
+				),
 				Tags:              []string{},
 				DefaultDimensions: make(map[string]string),
 			},
@@ -87,13 +94,13 @@ func TestLoadConfig(t *testing.T) {
 				RetrySettings:    exporterhelper.NewDefaultRetrySettings(),
 				QueueSettings:    exporterhelper.NewDefaultQueueSettings(),
 
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "http://example.com/api/v2/metrics/ingest",
-					Headers: map[string]string{
+				HTTPClientSettings: httpClientSettingsWith(
+					"http://example.com/api/v2/metrics/ingest",
+					map[string]string{
 						"Authorization": "Api-Token token",
 						"Content-Type":  "text/plain; charset=UTF-8",
 						"User-Agent":    "opentelemetry-collector"},
-				},
+				),
 				APIToken: "token",
 
 				Prefix: "myprefix",
@@ -111,13 +118,13 @@ func TestLoadConfig(t *testing.T) {
 				RetrySettings:    exporterhelper.NewDefaultRetrySettings(),
 				QueueSettings:    exporterhelper.NewDefaultQueueSettings(),
 
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "http://example.com/api/v2/metrics/ingest",
-					Headers: map[string]string{
+				HTTPClientSettings: httpClientSettingsWith(
+					"http://example.com/api/v2/metrics/ingest",
+					map[string]string{
 						"Authorization": "Api-Token token",
 						"Content-Type":  "text/plain; charset=UTF-8",
 						"User-Agent":    "opentelemetry-collector"},
-				},
+				),
 				APIToken: "token",
 
 				Prefix: "myprefix",

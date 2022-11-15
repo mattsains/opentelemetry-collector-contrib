@@ -36,13 +36,13 @@ import (
 )
 
 func makeClient(t *testing.T, host string, compression bool) exporterClient {
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Endpoint = host
 	cfg := &Config{
 		ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
 		DisableCompression: !compression,
 		Tag:                TagNone,
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: host,
-		},
+		HTTPClientSettings: httpConfig,
 		Logs: LogsConfig{
 			IngestToken: "logs-token",
 		},

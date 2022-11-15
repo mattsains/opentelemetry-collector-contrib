@@ -33,14 +33,13 @@ func TestCreateDefaultConfig(t *testing.T) {
 	factory := NewFactory()
 	cfg := factory.CreateDefaultConfig()
 
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Timeout = 30 * time.Second
+	httpConfig.WriteBufferSize = 512 * 1024
+
 	assert.Equal(t, &Config{
-		ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint:        "",
-			Timeout:         30 * time.Second,
-			Headers:         map[string]string{},
-			WriteBufferSize: 512 * 1024,
-		},
+		ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+		HTTPClientSettings: httpConfig,
 	}, cfg, "failed to create default config")
 
 	assert.NoError(t, componenttest.CheckConfigStruct(cfg))
@@ -61,16 +60,17 @@ func TestLoadConfig(t *testing.T) {
 		err = cfg.Validate()
 
 		require.NoError(t, err)
+
+		expectedHTTPConfig := confighttp.NewDefaultHTTPClientSettings()
+		expectedHTTPConfig.Endpoint = "http://example.com/api/"
+		expectedHTTPConfig.Timeout = 30 * time.Second
+		expectedHTTPConfig.WriteBufferSize = 512 * 1024
+
 		assert.Equal(t, &Config{
-			ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-			HTTPClientSettings: confighttp.HTTPClientSettings{
-				Endpoint:        "http://example.com/api/",
-				Timeout:         30 * time.Second,
-				Headers:         map[string]string{},
-				WriteBufferSize: 512 * 1024,
-			},
-			Endpoint: "http://example.com/api/",
-			AgentKey: "key1",
+			ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+			HTTPClientSettings: expectedHTTPConfig,
+			Endpoint:           "http://example.com/api/",
+			AgentKey:           "key1",
 		}, cfg)
 	})
 

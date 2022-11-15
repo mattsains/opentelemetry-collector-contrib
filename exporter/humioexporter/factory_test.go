@@ -40,6 +40,21 @@ func newHumioFactory(t *testing.T) component.ExporterFactory {
 func TestCreateTracesExporter(t *testing.T) {
 	// Arrange
 	factory := newHumioFactory(t)
+
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Endpoint = "http://localhost:8080"
+
+	httpConfigWithInvalidClientConfig := httpConfig
+	httpConfigWithInvalidClientConfig.TLSSetting = configtls.TLSClientSetting{
+		TLSSetting: configtls.TLSSetting{
+			CertFile: "",
+			KeyFile:  "key.key",
+		},
+	}
+
+	httpConfigWithInvalidURL := confighttp.NewDefaultHTTPClientSettings()
+	httpConfigWithInvalidURL.Endpoint = "\n"
+
 	testCases := []struct {
 		desc              string
 		cfg               component.ExporterConfig
@@ -49,11 +64,9 @@ func TestCreateTracesExporter(t *testing.T) {
 		{
 			desc: "Valid trace configuration",
 			cfg: &Config{
-				ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-				Tag:              TagNone,
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "http://localhost:8080",
-				},
+				ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+				Tag:                TagNone,
+				HTTPClientSettings: httpConfig,
 				Traces: TracesConfig{
 					IngestToken: "00000000-0000-0000-0000-0000000000000",
 				},
@@ -63,39 +76,27 @@ func TestCreateTracesExporter(t *testing.T) {
 		{
 			desc: "Unsanitizable trace configuration",
 			cfg: &Config{
-				ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-				Tag:              TagNone,
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "\n",
-				},
+				ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+				Tag:                TagNone,
+				HTTPClientSettings: httpConfigWithInvalidURL,
 			},
 			wantErrorOnCreate: true,
 		},
 		{
 			desc: "Missing ingest token",
 			cfg: &Config{
-				ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-				Tag:              TagNone,
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "http://localhost:8080",
-				},
+				ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+				Tag:                TagNone,
+				HTTPClientSettings: httpConfig,
 			},
 			wantErrorOnCreate: true,
 		},
 		{
 			desc: "Invalid client configuration",
 			cfg: &Config{
-				ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-				Tag:              TagNone,
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "http://localhost:8080",
-					TLSSetting: configtls.TLSClientSetting{
-						TLSSetting: configtls.TLSSetting{
-							CertFile: "",
-							KeyFile:  "key.key",
-						},
-					},
-				},
+				ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+				Tag:                TagNone,
+				HTTPClientSettings: httpConfigWithInvalidClientConfig,
 				Traces: TracesConfig{
 					IngestToken: "00000000-0000-0000-0000-0000000000000",
 				},

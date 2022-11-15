@@ -78,6 +78,22 @@ func TestLoadInvalidTagStrategy(t *testing.T) {
 }
 
 func TestLoadAllSettings(t *testing.T) {
+	expectedHTTPConfig := confighttp.NewDefaultHTTPClientSettings()
+	expectedHTTPConfig.Endpoint = "http://localhost:8080/"
+	expectedHTTPConfig.Headers = map[string]string{}
+	expectedHTTPConfig.Timeout = 10 * time.Second
+	expectedHTTPConfig.ReadBufferSize = 4096
+	expectedHTTPConfig.WriteBufferSize = 4096
+	expectedHTTPConfig.TLSSetting = configtls.TLSClientSetting{
+		Insecure:           false,
+		InsecureSkipVerify: false,
+		ServerName:         "",
+		TLSSetting: configtls.TLSSetting{
+			CAFile:   "server.crt",
+			CertFile: "client.crt",
+			KeyFile:  "client.key",
+		},
+	}
 	// Arrange
 	expected := &Config{
 		ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
@@ -94,23 +110,7 @@ func TestLoadAllSettings(t *testing.T) {
 			MaxElapsedTime:  5 * time.Minute,
 		},
 
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint:        "http://localhost:8080/",
-			Headers:         map[string]string{},
-			Timeout:         10 * time.Second,
-			ReadBufferSize:  4096,
-			WriteBufferSize: 4096,
-			TLSSetting: configtls.TLSClientSetting{
-				Insecure:           false,
-				InsecureSkipVerify: false,
-				ServerName:         "",
-				TLSSetting: configtls.TLSSetting{
-					CAFile:   "server.crt",
-					CertFile: "client.crt",
-					KeyFile:  "client.key",
-				},
-			},
-		},
+		HTTPClientSettings: expectedHTTPConfig,
 
 		DisableCompression: true,
 		Tag:                TagTraceID,
@@ -132,6 +132,42 @@ func TestLoadAllSettings(t *testing.T) {
 }
 
 func TestValidate(t *testing.T) {
+	httpConfigWithLocalhostURL := confighttp.NewDefaultHTTPClientSettings()
+	httpConfigWithLocalhostURL.Endpoint = "http://localhost:8080"
+
+	httpConfigWithLocalhostURLAndHeaders := httpConfigWithLocalhostURL
+	httpConfigWithLocalhostURLAndHeaders.Headers = map[string]string{
+		"user-agent":       "Humio",
+		"content-type":     "application/json",
+		"content-encoding": "gzip",
+	}
+
+	httpConfigWithEURL := confighttp.NewDefaultHTTPClientSettings()
+	httpConfigWithEURL.Endpoint = "e"
+
+	httpConfigWithEURLAndPlaintextHeader := httpConfigWithEURL
+	httpConfigWithEURLAndPlaintextHeader.Headers = map[string]string{
+		"content-type": "text/plain",
+	}
+
+	httpConfigWithEURLAndBearerToken := httpConfigWithEURL
+	httpConfigWithEURLAndBearerToken.Headers = map[string]string{
+		"authorization": "Bearer mytoken",
+	}
+
+	httpConfigWithEURLAndInvalidEncoding := httpConfigWithEURL
+	httpConfigWithEURLAndInvalidEncoding.Headers = map[string]string{
+		"content-encoding": "compress",
+	}
+
+	httpConfigWithEURLAndContentEncoding := httpConfigWithEURL
+	httpConfigWithEURLAndContentEncoding.Headers = map[string]string{
+		"content-encoding": "gzip",
+	}
+
+	httpConfigWithInvalidURL := confighttp.NewDefaultHTTPClientSettings()
+	httpConfigWithInvalidURL.Endpoint = "\n\t"
+
 	// Arrange
 	testCases := []struct {
 		desc    string
@@ -141,27 +177,18 @@ func TestValidate(t *testing.T) {
 		{
 			desc: "Valid minimal configuration",
 			cfg: &Config{
-				ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-				Tag:              TagNone,
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "http://localhost:8080",
-				},
+				ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+				Tag:                TagNone,
+				HTTPClientSettings: httpConfigWithLocalhostURL,
 			},
 			wantErr: false,
 		},
 		{
 			desc: "Valid custom headers",
 			cfg: &Config{
-				ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-				Tag:              TagNone,
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "http://localhost:8080",
-					Headers: map[string]string{
-						"user-agent":       "Humio",
-						"content-type":     "application/json",
-						"content-encoding": "gzip",
-					},
-				},
+				ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+				Tag:                TagNone,
+				HTTPClientSettings: httpConfigWithLocalhostURLAndHeaders,
 			},
 			wantErr: false,
 		},
@@ -171,42 +198,34 @@ func TestValidate(t *testing.T) {
 				ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
 				DisableCompression: true,
 				Tag:                TagNone,
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "http://localhost:8080",
-				},
+				HTTPClientSettings: httpConfigWithLocalhostURL,
 			},
 			wantErr: false,
 		},
 		{
 			desc: "Missing endpoint",
 			cfg: &Config{
-				ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-				Tag:              TagNone,
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "",
-				},
+				ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+				Tag:                TagNone,
+				HTTPClientSettings: confighttp.NewDefaultHTTPClientSettings(),
 			},
 			wantErr: true,
 		},
 		{
 			desc: "Override tag strategy",
 			cfg: &Config{
-				ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-				Tag:              TagServiceName,
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "e",
-				},
+				ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+				Tag:                TagServiceName,
+				HTTPClientSettings: httpConfigWithEURL,
 			},
 			wantErr: false,
 		},
 		{
 			desc: "Unix time",
 			cfg: &Config{
-				ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-				Tag:              TagNone,
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "e",
-				},
+				ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+				Tag:                TagNone,
+				HTTPClientSettings: httpConfigWithEURL,
 				Traces: TracesConfig{
 					UnixTimestamps: true,
 				},
@@ -216,53 +235,36 @@ func TestValidate(t *testing.T) {
 		{
 			desc: "Error creating URLs",
 			cfg: &Config{
-				ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-				Tag:              TagNone,
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "\n\t",
-				},
+				ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+				Tag:                TagNone,
+				HTTPClientSettings: httpConfigWithInvalidURL,
 			},
 			wantErr: true,
 		},
 		{
 			desc: "Invalid Content-Type header",
 			cfg: &Config{
-				ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-				Tag:              TagNone,
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "e",
-					Headers: map[string]string{
-						"content-type": "text/plain",
-					},
-				},
+				ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+				Tag:                TagNone,
+				HTTPClientSettings: httpConfigWithEURLAndPlaintextHeader,
 			},
 			wantErr: true,
 		},
 		{
 			desc: "User-provided Authorization header",
 			cfg: &Config{
-				ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-				Tag:              TagNone,
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "e",
-					Headers: map[string]string{
-						"authorization": "Bearer mytoken",
-					},
-				},
+				ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+				Tag:                TagNone,
+				HTTPClientSettings: httpConfigWithEURLAndBearerToken,
 			},
 			wantErr: true,
 		},
 		{
 			desc: "Invalid content encoding",
 			cfg: &Config{
-				ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-				Tag:              TagNone,
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "e",
-					Headers: map[string]string{
-						"content-encoding": "compress",
-					},
-				},
+				ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+				Tag:                TagNone,
+				HTTPClientSettings: httpConfigWithEURLAndInvalidEncoding,
 			},
 			wantErr: true,
 		},
@@ -272,12 +274,7 @@ func TestValidate(t *testing.T) {
 				ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
 				DisableCompression: true,
 				Tag:                TagNone,
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "e",
-					Headers: map[string]string{
-						"content-encoding": "gzip",
-					},
-				},
+				HTTPClientSettings: httpConfigWithEURLAndContentEncoding,
 			},
 			wantErr: true,
 		},
@@ -294,12 +291,12 @@ func TestValidate(t *testing.T) {
 }
 
 func TestSanitizeValid(t *testing.T) {
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Endpoint = "http://localhost:8080"
 	// Arrange
 	cfg := &Config{
-		ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: "http://localhost:8080",
-		},
+		ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+		HTTPClientSettings: httpConfig,
 	}
 
 	// Act
@@ -323,17 +320,17 @@ func TestSanitizeValid(t *testing.T) {
 }
 
 func TestSanitizeCustomHeaders(t *testing.T) {
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Endpoint = "http://localhost:8080"
+	httpConfig.Headers = map[string]string{
+		"user-agent":       "Humio",
+		"content-type":     "application/json",
+		"content-encoding": "gzip",
+	}
 	// Arrange
 	cfg := &Config{
-		ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: "http://localhost:8080",
-			Headers: map[string]string{
-				"user-agent":       "Humio",
-				"content-type":     "application/json",
-				"content-encoding": "gzip",
-			},
-		},
+		ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+		HTTPClientSettings: httpConfig,
 	}
 
 	// Act
@@ -349,13 +346,13 @@ func TestSanitizeCustomHeaders(t *testing.T) {
 }
 
 func TestSanitizeNoCompression(t *testing.T) {
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Endpoint = "http://localhost:8080"
 	// Arrange
 	cfg := &Config{
 		ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
 		DisableCompression: true,
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: "http://localhost:8080",
-		},
+		HTTPClientSettings: httpConfig,
 	}
 
 	// Act
@@ -370,6 +367,8 @@ func TestSanitizeNoCompression(t *testing.T) {
 }
 
 func TestGetEndpoint(t *testing.T) {
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Endpoint = "http://localhost:8080"
 	// Arrange
 	expected := &url.URL{
 		Scheme: "http",
@@ -378,9 +377,7 @@ func TestGetEndpoint(t *testing.T) {
 	}
 
 	cfg := Config{
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: "http://localhost:8080",
-		},
+		HTTPClientSettings: httpConfig,
 	}
 
 	// Act
@@ -392,11 +389,11 @@ func TestGetEndpoint(t *testing.T) {
 }
 
 func TestGetEndpointError(t *testing.T) {
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Endpoint = "\n\t"
 	// Arrange
 	cfg := Config{
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: "\n\t",
-		},
+		HTTPClientSettings: httpConfig,
 	}
 
 	// Act

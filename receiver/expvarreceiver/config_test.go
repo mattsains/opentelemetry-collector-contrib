@@ -40,6 +40,10 @@ func TestLoadConfig(t *testing.T) {
 	metricCfg.ProcessRuntimeMemstatsTotalAlloc.Enabled = true
 	metricCfg.ProcessRuntimeMemstatsMallocs.Enabled = false
 
+	httpClientSettingsCustomURL := confighttp.NewDefaultHTTPClientSettings()
+	httpClientSettingsCustomURL.Endpoint = "http://localhost:8000/custom/path"
+	httpClientSettingsCustomURL.Timeout = time.Second * 5
+
 	tests := []struct {
 		id           component.ID
 		expected     component.ReceiverConfig
@@ -56,11 +60,8 @@ func TestLoadConfig(t *testing.T) {
 					ReceiverSettings:   config.NewReceiverSettings(component.NewID(typeStr)),
 					CollectionInterval: 30 * time.Second,
 				},
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "http://localhost:8000/custom/path",
-					Timeout:  time.Second * 5,
-				},
-				MetricsConfig: metricCfg,
+				HTTPClientSettings: httpClientSettingsCustomURL,
+				MetricsConfig:      metricCfg,
 			},
 		},
 		{

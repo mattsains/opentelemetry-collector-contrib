@@ -37,6 +37,14 @@ func TestLoadConfig(t *testing.T) {
 	defaultCfg := createDefaultConfig().(*Config)
 	defaultCfg.Endpoint = "http://jaeger.example:14268/api/traces"
 
+	expectedHTTPConfig := confighttp.NewDefaultHTTPClientSettings()
+	expectedHTTPConfig.Endpoint = "http://jaeger.example.com/api/traces"
+	expectedHTTPConfig.Headers = map[string]string{
+		"added-entry": "added value",
+		"dot.test":    "test",
+	}
+	expectedHTTPConfig.Timeout = 2 * time.Second
+
 	tests := []struct {
 		id       component.ID
 		expected component.ExporterConfig
@@ -48,15 +56,8 @@ func TestLoadConfig(t *testing.T) {
 		{
 			id: component.NewIDWithName(typeStr, "2"),
 			expected: &Config{
-				ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "http://jaeger.example.com/api/traces",
-					Headers: map[string]string{
-						"added-entry": "added value",
-						"dot.test":    "test",
-					},
-					Timeout: 2 * time.Second,
-				},
+				ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+				HTTPClientSettings: expectedHTTPConfig,
 			},
 		},
 	}

@@ -71,6 +71,7 @@ type Config struct {
 	Mapping            MappingsSettings  `mapstructure:"mapping"`
 }
 
+// TODO: can this be replaced with confighttp.HTTPClientSettings?
 type HTTPClientSettings struct {
 	Authentication AuthenticationSettings `mapstructure:",squash"`
 

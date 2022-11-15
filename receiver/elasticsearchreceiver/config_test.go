@@ -158,6 +158,11 @@ func TestLoadConfig(t *testing.T) {
 
 	defaultMetrics := metadata.DefaultMetricsSettings()
 	defaultMetrics.ElasticsearchNodeFsDiskAvailable.Enabled = false
+
+	expectedHTTPSettingsCustomURL := confighttp.NewDefaultHTTPClientSettings()
+	expectedHTTPSettingsCustomURL.Timeout = defaultHTTPClientTimeout
+	expectedHTTPSettingsCustomURL.Endpoint = "http://example.com:9200"
+
 	tests := []struct {
 		id       component.ID
 		expected component.ReceiverConfig
@@ -176,13 +181,10 @@ func TestLoadConfig(t *testing.T) {
 					ReceiverSettings:   config.NewReceiverSettings(component.NewID(typeStr)),
 					CollectionInterval: 2 * time.Minute,
 				},
-				Metrics:  defaultMetrics,
-				Username: "otel",
-				Password: "password",
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Timeout:  10000000000,
-					Endpoint: "http://example.com:9200",
-				},
+				Metrics:            defaultMetrics,
+				Username:           "otel",
+				Password:           "password",
+				HTTPClientSettings: expectedHTTPSettingsCustomURL,
 			},
 		},
 	}

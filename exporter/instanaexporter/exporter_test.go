@@ -34,9 +34,12 @@ func TestPushConvertedTraces(t *testing.T) {
 	}))
 	defer traceServer.Close()
 
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Endpoint = traceServer.URL
+
 	cfg := Config{
 		AgentKey:           "key11",
-		HTTPClientSettings: confighttp.HTTPClientSettings{Endpoint: traceServer.URL},
+		HTTPClientSettings: httpConfig,
 		Endpoint:           traceServer.URL,
 		ExporterSettings:   config.NewExporterSettings(component.NewIDWithName(typeStr, "valid")),
 	}

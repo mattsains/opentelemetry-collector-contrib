@@ -47,16 +47,17 @@ func TestNewFactory(t *testing.T) {
 			testFunc: func(t *testing.T) {
 				factory := NewFactory()
 
+				httpConfig := confighttp.NewDefaultHTTPClientSettings()
+				httpConfig.Endpoint = defaultEndpoint
+				httpConfig.Timeout = 10 * time.Second
+
 				var expectedCfg component.ReceiverConfig = &Config{
 					ScraperControllerSettings: scraperhelper.ScraperControllerSettings{
 						ReceiverSettings:   config.NewReceiverSettings(component.NewID(typeStr)),
 						CollectionInterval: 10 * time.Second,
 					},
-					HTTPClientSettings: confighttp.HTTPClientSettings{
-						Endpoint: defaultEndpoint,
-						Timeout:  10 * time.Second,
-					},
-					Metrics: metadata.DefaultMetricsSettings(),
+					HTTPClientSettings: httpConfig,
+					Metrics:            metadata.DefaultMetricsSettings(),
 				}
 
 				require.Equal(t, expectedCfg, factory.CreateDefaultConfig())

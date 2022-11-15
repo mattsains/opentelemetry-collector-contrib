@@ -34,6 +34,11 @@ func TestLoadConfig(t *testing.T) {
 	cm, err := confmaptest.LoadConf(filepath.Join("testdata", "config.yaml"))
 	require.NoError(t, err)
 
+	expectedHTTPConfig := confighttp.NewDefaultHTTPClientSettings()
+	expectedHTTPConfig.Endpoint = "http://localhost:8080"
+	expectedHTTPConfig.Timeout = 500 * time.Millisecond
+	expectedHTTPConfig.Headers = map[string]string{"User-Agent": "OpenTelemetry -> Influx"}
+
 	tests := []struct {
 		id       component.ID
 		expected component.ExporterConfig
@@ -45,12 +50,8 @@ func TestLoadConfig(t *testing.T) {
 		{
 			id: component.NewIDWithName(typeStr, "withsettings"),
 			expected: &Config{
-				ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
-				HTTPClientSettings: confighttp.HTTPClientSettings{
-					Endpoint: "http://localhost:8080",
-					Timeout:  500 * time.Millisecond,
-					Headers:  map[string]string{"User-Agent": "OpenTelemetry -> Influx"},
-				},
+				ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
+				HTTPClientSettings: expectedHTTPConfig,
 				QueueSettings: exporterhelper.QueueSettings{
 					Enabled:      true,
 					NumConsumers: 3,

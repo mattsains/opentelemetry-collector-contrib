@@ -29,6 +29,16 @@ import (
 	"go.opentelemetry.io/collector/confmap/confmaptest"
 )
 
+func newExpectedHTTPClientSettings() confighttp.HTTPClientSettings {
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Endpoint = "https://log-stream.sys.example.internal"
+	httpConfig.TLSSetting = configtls.TLSClientSetting{
+		InsecureSkipVerify: true,
+	}
+	httpConfig.Timeout = time.Second * 20
+	return httpConfig
+}
+
 func TestLoadConfig(t *testing.T) {
 	t.Parallel()
 
@@ -45,14 +55,8 @@ func TestLoadConfig(t *testing.T) {
 			expected: &Config{
 				ReceiverSettings: config.NewReceiverSettings(component.NewID(typeStr)),
 				RLPGateway: RLPGatewayConfig{
-					HTTPClientSettings: confighttp.HTTPClientSettings{
-						Endpoint: "https://log-stream.sys.example.internal",
-						TLSSetting: configtls.TLSClientSetting{
-							InsecureSkipVerify: true,
-						},
-						Timeout: time.Second * 20,
-					},
-					ShardID: "otel-test",
+					HTTPClientSettings: newExpectedHTTPClientSettings(),
+					ShardID:            "otel-test",
 				},
 				UAA: UAAConfig{
 					LimitedHTTPClientSettings: LimitedHTTPClientSettings{
@@ -123,14 +127,8 @@ func TestHTTPConfigurationStructConsistency(t *testing.T) {
 func loadSuccessfulConfig(t *testing.T) *Config {
 	configuration := &Config{
 		RLPGateway: RLPGatewayConfig{
-			HTTPClientSettings: confighttp.HTTPClientSettings{
-				Endpoint: "https://log-stream.sys.example.internal",
-				Timeout:  time.Second * 20,
-				TLSSetting: configtls.TLSClientSetting{
-					InsecureSkipVerify: true,
-				},
-			},
-			ShardID: "otel-test",
+			HTTPClientSettings: newExpectedHTTPClientSettings(),
+			ShardID:            "otel-test",
 		},
 		UAA: UAAConfig{
 			LimitedHTTPClientSettings: LimitedHTTPClientSettings{

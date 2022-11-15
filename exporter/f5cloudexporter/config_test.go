@@ -39,6 +39,16 @@ func TestLoadConfig(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, component.UnmarshalExporterConfig(sub, cfg))
 
+	expectedHTTPConfig := confighttp.NewDefaultHTTPClientSettings()
+	expectedHTTPConfig.Endpoint = "https://f5cloud"
+	expectedHTTPConfig.ReadBufferSize = 123
+	expectedHTTPConfig.WriteBufferSize = 345
+	expectedHTTPConfig.Timeout = time.Second * 10
+	expectedHTTPConfig.Headers = map[string]string{
+		"User-Agent": "opentelemetry-collector-contrib {{version}}",
+	}
+	expectedHTTPConfig.Compression = "gzip"
+
 	actualCfg := cfg.(*Config)
 	expectedCfg := &Config{
 		Config: otlphttp.Config{
@@ -54,16 +64,7 @@ func TestLoadConfig(t *testing.T) {
 				NumConsumers: 2,
 				QueueSize:    10,
 			},
-			HTTPClientSettings: confighttp.HTTPClientSettings{
-				Endpoint:        "https://f5cloud",
-				ReadBufferSize:  123,
-				WriteBufferSize: 345,
-				Timeout:         time.Second * 10,
-				Headers: map[string]string{
-					"User-Agent": "opentelemetry-collector-contrib {{version}}",
-				},
-				Compression: "gzip",
-			},
+			HTTPClientSettings: expectedHTTPConfig,
 		},
 		Source: "dev",
 		AuthConfig: AuthConfig{
