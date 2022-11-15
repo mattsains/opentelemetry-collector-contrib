@@ -54,9 +54,9 @@ func TestLoadConfig(t *testing.T) {
 	expectedAllSettingsHTTPConfig.WriteBufferSize = 345
 	expectedAllSettingsHTTPConfig.Timeout = time.Second * 10
 
-	expectedJsonHTTPConfig := expectedAllSettingsHTTPConfig
-	expectedJsonHTTPConfig.Headers = map[string]string{}
-	expectedJsonHTTPConfig.TLSSetting = configtls.TLSClientSetting{
+	expectedJSONHTTPConfig := expectedAllSettingsHTTPConfig
+	expectedJSONHTTPConfig.Headers = map[string]string{}
+	expectedJSONHTTPConfig.TLSSetting = configtls.TLSClientSetting{
 		TLSSetting: configtls.TLSSetting{
 			CAFile:   "",
 			CertFile: "",
@@ -64,9 +64,9 @@ func TestLoadConfig(t *testing.T) {
 		},
 		Insecure: false,
 	}
-	expectedJsonHTTPConfig.ReadBufferSize = 0
-	expectedJsonHTTPConfig.WriteBufferSize = 524288
-	expectedJsonHTTPConfig.Timeout = time.Second * 30
+	expectedJSONHTTPConfig.ReadBufferSize = 0
+	expectedJSONHTTPConfig.WriteBufferSize = 524288
+	expectedJSONHTTPConfig.Timeout = time.Second * 30
 
 	tests := []struct {
 		id       component.ID
@@ -109,7 +109,7 @@ func TestLoadConfig(t *testing.T) {
 			id: component.NewIDWithName(typeStr, "json"),
 			expected: &Config{
 				ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
-				HTTPClientSettings: expectedJsonHTTPConfig,
+				HTTPClientSettings: expectedJSONHTTPConfig,
 				RetrySettings: exporterhelper.RetrySettings{
 					Enabled:         true,
 					InitialInterval: 5 * time.Second,

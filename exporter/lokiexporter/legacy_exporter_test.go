@@ -69,7 +69,7 @@ func appendTestLogData(dest plog.Logs, numberOfLogs int, attributes map[string]i
 	}
 }
 
-func newHTTPClientSettings() config.HTTPClientSettings {
+func newHTTPClientSettings() confighttp.HTTPClientSettings {
 	httpConfig := confighttp.NewDefaultHTTPClientSettings()
 	httpConfig.Endpoint = validEndpoint
 	return httpConfig

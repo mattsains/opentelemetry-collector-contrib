@@ -265,7 +265,7 @@ func TestLogsToLokiRequestWithGroupingByTenant(t *testing.T) {
 			httpConfig := confighttp.NewDefaultHTTPClientSettings()
 			httpConfig.Endpoint = ts.URL
 			cfg := &Config{
-				HTTPClientSettings: httpConfig
+				HTTPClientSettings: httpConfig,
 			}
 
 			f := NewFactory()
