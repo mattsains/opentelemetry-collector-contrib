@@ -46,6 +46,7 @@ func createDefaultConfig() component.ExporterConfig {
 	httpConfig := confighttp.NewDefaultHTTPClientSettings()
 	httpConfig.Timeout = 30 * time.Second
 	httpConfig.WriteBufferSize = 512 * 1024
+	httpConfig.Headers = map[string]string{}
 
 	return &Config{
 		ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),

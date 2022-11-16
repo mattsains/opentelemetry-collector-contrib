@@ -52,6 +52,7 @@ func createDefaultConfig() component.ExporterConfig {
 	// We almost read 0 bytes, so no need to tune ReadBufferSize.
 	// TODO: but the default write buffer size is 4k, not 5k
 	httpConfig.WriteBufferSize = 512 * 1024
+	httpConfig.Headers = map[string]string{}
 
 	return &Config{
 		Region:             "",

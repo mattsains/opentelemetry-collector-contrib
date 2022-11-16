@@ -42,6 +42,9 @@ func NewFactory() component.ExporterFactory {
 
 // Provides a struct with default values for all relevant configuration settings
 func createDefaultConfig() component.ExporterConfig {
+	httpConfig := confighttp.NewDefaultHTTPClientSettings()
+	httpConfig.Headers = map[string]string{}
+
 	return &Config{
 		ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
 
@@ -49,7 +52,7 @@ func createDefaultConfig() component.ExporterConfig {
 		QueueSettings: exporterhelper.NewDefaultQueueSettings(),
 		RetrySettings: exporterhelper.NewDefaultRetrySettings(),
 
-		HTTPClientSettings: confighttp.NewDefaultHTTPClientSettings(),
+		HTTPClientSettings: httpConfig,
 
 		// Settings specific to the Humio exporter
 		DisableCompression: false,

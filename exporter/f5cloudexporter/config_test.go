@@ -75,6 +75,11 @@ func TestLoadConfig(t *testing.T) {
 	// testing function equality is not supported in Go hence these will be ignored for this test
 	expectedCfg.HTTPClientSettings.CustomRoundTripper = nil
 	actualCfg.HTTPClientSettings.CustomRoundTripper = nil
+	// (#6641) temporarily setting these values to their expected values in anticipation of an opentelemetry-collector change
+	expectedMaxIdleConns := 100
+	expectedIdleConnTimeout := 90 * time.Second
+	actualCfg.HTTPClientSettings.MaxIdleConns = &expectedMaxIdleConns
+	actualCfg.HTTPClientSettings.IdleConnTimeout = &expectedIdleConnTimeout
 	assert.Equal(t, expectedCfg, actualCfg)
 }
 

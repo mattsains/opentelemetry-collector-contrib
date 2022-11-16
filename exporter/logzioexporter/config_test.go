@@ -78,13 +78,12 @@ func TestDefaultLoadConfig(t *testing.T) {
 	expected.RetrySettings = exporterhelper.NewDefaultRetrySettings()
 	expected.QueueSettings = exporterhelper.NewDefaultQueueSettings()
 	expected.HTTPClientSettings = confighttp.NewDefaultHTTPClientSettings()
-	expected.HTTPClientSettings.Endpoint = ""
 	expected.HTTPClientSettings.Timeout = 30 * time.Second
-	expected.HTTPClientSettings.Headers = map[string]string{}
 	// Default to gzip compression
 	expected.HTTPClientSettings.Compression = configcompression.Gzip
 	// We almost read 0 bytes, so no need to tune ReadBufferSize.
 	expected.HTTPClientSettings.WriteBufferSize = 512 * 1024
+	expected.HTTPClientSettings.Headers = map[string]string{}
 
 	assert.Equal(t, expected, cfg)
 }

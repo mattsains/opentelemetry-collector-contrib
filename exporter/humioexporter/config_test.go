@@ -80,10 +80,10 @@ func TestLoadInvalidTagStrategy(t *testing.T) {
 func TestLoadAllSettings(t *testing.T) {
 	expectedHTTPConfig := confighttp.NewDefaultHTTPClientSettings()
 	expectedHTTPConfig.Endpoint = "http://localhost:8080/"
-	expectedHTTPConfig.Headers = map[string]string{}
 	expectedHTTPConfig.Timeout = 10 * time.Second
 	expectedHTTPConfig.ReadBufferSize = 4096
 	expectedHTTPConfig.WriteBufferSize = 4096
+	expectedHTTPConfig.Headers = map[string]string{}
 	expectedHTTPConfig.TLSSetting = configtls.TLSClientSetting{
 		Insecure:           false,
 		InsecureSkipVerify: false,

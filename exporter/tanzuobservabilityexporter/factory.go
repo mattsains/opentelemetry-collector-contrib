@@ -20,6 +20,7 @@ import (
 
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/config"
+	"go.opentelemetry.io/collector/config/confighttp"
 	"go.opentelemetry.io/collector/exporter/exporterhelper"
 )
 
@@ -44,6 +45,9 @@ func createDefaultConfig() component.ExporterConfig {
 		ExporterSettings: config.NewExporterSettings(component.NewID(exporterType)),
 		QueueSettings:    exporterhelper.NewDefaultQueueSettings(),
 		RetrySettings:    exporterhelper.NewDefaultRetrySettings(),
+		Traces: TracesConfig{
+			HTTPClientSettings: confighttp.NewDefaultHTTPClientSettings(),
+		},
 	}
 }
 

@@ -36,6 +36,7 @@ func TestCreateDefaultConfig(t *testing.T) {
 	httpConfig := confighttp.NewDefaultHTTPClientSettings()
 	httpConfig.Timeout = 30 * time.Second
 	httpConfig.WriteBufferSize = 512 * 1024
+	httpConfig.Headers = map[string]string{}
 
 	assert.Equal(t, &Config{
 		ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
@@ -65,6 +66,7 @@ func TestLoadConfig(t *testing.T) {
 		expectedHTTPConfig.Endpoint = "http://example.com/api/"
 		expectedHTTPConfig.Timeout = 30 * time.Second
 		expectedHTTPConfig.WriteBufferSize = 512 * 1024
+		expectedHTTPConfig.Headers = map[string]string{}
 
 		assert.Equal(t, &Config{
 			ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),

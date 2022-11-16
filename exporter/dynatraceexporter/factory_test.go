@@ -37,6 +37,8 @@ func TestCreateDefaultConfig(t *testing.T) {
 	factory := NewFactory()
 	cfg := factory.CreateDefaultConfig()
 
+	expectedHTTPConfig := confighttp.NewDefaultHTTPClientSettings()
+
 	assert.Equal(t, &dtconfig.Config{
 		ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
 		RetrySettings:    exporterhelper.NewDefaultRetrySettings(),
@@ -44,9 +46,9 @@ func TestCreateDefaultConfig(t *testing.T) {
 		ResourceToTelemetrySettings: resourcetotelemetry.Settings{
 			Enabled: false,
 		},
-
-		Tags:              []string{},
-		DefaultDimensions: make(map[string]string),
+		HTTPClientSettings: expectedHTTPConfig,
+		Tags:               []string{},
+		DefaultDimensions:  make(map[string]string),
 	}, cfg, "failed to create default config")
 
 	assert.NoError(t, componenttest.CheckConfigStruct(cfg))

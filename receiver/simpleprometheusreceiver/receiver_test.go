@@ -76,29 +76,7 @@ func TestReceiver(t *testing.T) {
 	}
 }
 
-func newTestHTTPConfigs(endpoint string) (secureHTTPConfig, insecureHTTPConfig, customCAHTTPConfig confighttp.HTTPClientSettings) {
-	secureHTTPConfig = confighttp.NewDefaultHTTPClientSettings()
-	secureHTTPConfig.Endpoint = endpoint
-
-	insecureHTTPConfig = confighttp.NewDefaultHTTPClientSettings()
-	insecureHTTPConfig.Endpoint = endpoint
-	insecureHTTPConfig.TLSSetting = configtls.TLSClientSetting{
-		Insecure: true,
-	}
-
-	customCAHTTPConfig = confighttp.NewDefaultHTTPClientSettings()
-	customCAHTTPConfig.Endpoint = endpoint
-	customCAHTTPConfig.TLSSetting = configtls.TLSClientSetting{
-		TLSSetting: configtls.TLSSetting{
-			CAFile: "./testdata/test_cert.pem",
-		},
-		InsecureSkipVerify: true,
-	}
-	return
-}
-
 func TestGetPrometheusConfig(t *testing.T) {
-	secureHTTPConfig, insecureHTTPConfig, customCAHTTPConfig := newTestHTTPConfigs("localhost:1234")
 	tests := []struct {
 		name    string
 		config  *Config
@@ -108,7 +86,12 @@ func TestGetPrometheusConfig(t *testing.T) {
 		{
 			name: "Test without TLS",
 			config: &Config{
-				HTTPClientSettings: insecureHTTPConfig,
+				HTTPClientSettings: confighttp.HTTPClientSettings{
+					Endpoint: "localhost:1234",
+					TLSSetting: configtls.TLSClientSetting{
+						Insecure: true,
+					},
+				},
 				CollectionInterval: 10 * time.Second,
 				MetricsPath:        "/metric",
 				Params:             url.Values{"foo": []string{"bar", "foobar"}},
@@ -141,7 +124,15 @@ func TestGetPrometheusConfig(t *testing.T) {
 		{
 			name: "Test with TLS",
 			config: &Config{
-				HTTPClientSettings: customCAHTTPConfig,
+				HTTPClientSettings: confighttp.HTTPClientSettings{
+					Endpoint: "localhost:1234",
+					TLSSetting: configtls.TLSClientSetting{
+						TLSSetting: configtls.TLSSetting{
+							CAFile: "./testdata/test_cert.pem",
+						},
+						InsecureSkipVerify: true,
+					},
+				},
 				CollectionInterval: 10 * time.Second,
 				MetricsPath:        "/metrics",
 			},
@@ -178,7 +169,9 @@ func TestGetPrometheusConfig(t *testing.T) {
 		{
 			name: "Test with TLS - default CA",
 			config: &Config{
-				HTTPClientSettings: secureHTTPConfig,
+				HTTPClientSettings: confighttp.HTTPClientSettings{
+					Endpoint: "localhost:1234",
+				},
 				CollectionInterval: 10 * time.Second,
 				MetricsPath:        "/metrics",
 				Labels: map[string]string{
@@ -227,7 +220,6 @@ func TestGetPrometheusConfig(t *testing.T) {
 }
 
 func TestGetPrometheusConfigWrapper(t *testing.T) {
-	secureHTTPConfig, insecureHTTPConfig, customCAHTTPConfig := newTestHTTPConfigs(defaultEndpoint)
 	tests := []struct {
 		name    string
 		config  *Config
@@ -244,7 +236,12 @@ func TestGetPrometheusConfigWrapper(t *testing.T) {
 						InsecureSkipVerify: true,
 					},
 				},
-				HTTPClientSettings: insecureHTTPConfig,
+				HTTPClientSettings: confighttp.HTTPClientSettings{
+					Endpoint: defaultEndpoint,
+					TLSSetting: configtls.TLSClientSetting{
+						Insecure: true,
+					},
+				},
 				CollectionInterval: 10 * time.Second,
 				MetricsPath:        "/metric",
 				Params:             url.Values{"foo": []string{"bar", "foobar"}},
@@ -286,7 +283,12 @@ func TestGetPrometheusConfigWrapper(t *testing.T) {
 				httpConfig: httpConfig{
 					TLSEnabled: false,
 				},
-				HTTPClientSettings: insecureHTTPConfig,
+				HTTPClientSettings: confighttp.HTTPClientSettings{
+					Endpoint: defaultEndpoint,
+					TLSSetting: configtls.TLSClientSetting{
+						Insecure: true,
+					},
+				},
 				CollectionInterval: 10 * time.Second,
 				MetricsPath:        "/metric",
 				Params:             url.Values{"foo": []string{"bar", "foobar"}},
@@ -322,7 +324,12 @@ func TestGetPrometheusConfigWrapper(t *testing.T) {
 				httpConfig: httpConfig{
 					TLSEnabled: false,
 				},
-				HTTPClientSettings: secureHTTPConfig,
+				HTTPClientSettings: confighttp.HTTPClientSettings{
+					Endpoint: defaultEndpoint,
+					TLSSetting: configtls.TLSClientSetting{
+						Insecure: false,
+					},
+				},
 				CollectionInterval: 10 * time.Second,
 				MetricsPath:        "/metric",
 				Params:             url.Values{"foo": []string{"bar", "foobar"}},
@@ -358,7 +365,15 @@ func TestGetPrometheusConfigWrapper(t *testing.T) {
 				httpConfig: httpConfig{
 					TLSEnabled: false,
 				},
-				HTTPClientSettings: customCAHTTPConfig,
+				HTTPClientSettings: confighttp.HTTPClientSettings{
+					Endpoint: defaultEndpoint,
+					TLSSetting: configtls.TLSClientSetting{
+						Insecure: false,
+						TLSSetting: configtls.TLSSetting{
+							CAFile: "./testdata/test_cert.pem",
+						},
+					},
+				},
 				CollectionInterval: 10 * time.Second,
 				MetricsPath:        "/metric",
 				Params:             url.Values{"foo": []string{"bar", "foobar"}},

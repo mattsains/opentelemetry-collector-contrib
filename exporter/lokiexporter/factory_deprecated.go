@@ -28,8 +28,8 @@ func createDefaultLegacyConfig() component.ExporterConfig {
 	httpConfig := confighttp.NewDefaultHTTPClientSettings()
 	httpConfig.Timeout = 30 * time.Second
 	// We almost read 0 bytes, so no need to tune ReadBufferSize.
-	// TODO: but the default write buffer size is 4k, not 5k
 	httpConfig.WriteBufferSize = 512 * 1024
+	httpConfig.Headers = map[string]string{}
 	return &Config{
 		ExporterSettings:   config.NewExporterSettings(component.NewID(typeStr)),
 		HTTPClientSettings: httpConfig,

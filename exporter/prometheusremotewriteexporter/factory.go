@@ -87,6 +87,7 @@ func createDefaultConfig() component.ExporterConfig {
 	httpConfig.Endpoint = "http://some.url:9411/api/prom/push"
 	httpConfig.WriteBufferSize = 512 * 1024
 	httpConfig.Timeout = exporterhelper.NewDefaultTimeoutSettings().Timeout
+	httpConfig.Headers = map[string]string{}
 
 	return &Config{
 		ExporterSettings: config.NewExporterSettings(component.NewID(typeStr)),
