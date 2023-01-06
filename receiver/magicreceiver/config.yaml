@@ -8,7 +8,9 @@ receivers:
     gomod: magicreceiver v0.64.0
 
 exporters:
-  - gomod: go.opentelemetry.io/collector/exporter/otlpexporter v0.68.0
+  - import: magicexporter
+    gomod: magicexporter v0.64.0
 
 replaces:
   - magicreceiver => ../
+  - magicexporter => ../../../exporter/magicexporter

@@ -2,11 +2,10 @@ receivers:
   magic:
 
 exporters:
-  otlp:
-    endpoint: otelcol:4317
+  magic:
 
 service:
   pipelines:
     metrics:
       receivers: [magic]
-      exporters: [otlp]
+      exporters: [magic]

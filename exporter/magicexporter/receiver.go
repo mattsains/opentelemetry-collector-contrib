@@ -12,24 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package magicreceiver
+package magicexporter
 
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/consumer"
+	"go.opentelemetry.io/collector/exporter"
 	"go.opentelemetry.io/collector/pdata/pmetric"
-	"go.opentelemetry.io/collector/receiver"
 )
 
-func NewFactory() receiver.Factory {
-	return receiver.NewFactory(
+func NewFactory() exporter.Factory {
+	return exporter.NewFactory(
 		"magic",
 		createDefaultConfig,
-		receiver.WithMetrics(createMetricsReceiver, component.StabilityLevelAlpha))
+		exporter.WithMetrics(createMetricsExporter, component.StabilityLevelAlpha))
 }
 
 type Config struct{}
@@ -38,40 +37,30 @@ func createDefaultConfig() component.Config {
 	return &Config{}
 }
 
-type Receiver struct {
-	config       *Config
-	nextConsumer consumer.Metrics
+type Exporter struct {
+	config *Config
 }
 
-func createMetricsReceiver(
-	ctx context.Context,
-	set receiver.CreateSettings,
-	baseCfg component.Config,
-	nextConsumer consumer.Metrics,
-) (receiver.Metrics, error) {
+func createMetricsExporter(context context.Context, set exporter.CreateSettings, baseCfg component.Config) (exporter.Metrics, error) {
 	cfg := baseCfg.(*Config)
-	return Receiver{
-		config:       cfg,
-		nextConsumer: nextConsumer,
+	return Exporter{
+		config: cfg,
 	}, nil
 }
 
-func (r Receiver) Start(ctx context.Context, host component.Host) error {
-	go func() {
-		time.Sleep(time.Second)
-		// emit metric
-		metrics := pmetric.NewMetrics()
-
-		err := r.nextConsumer.ConsumeMetrics(ctx, metrics)
-
-		if err != nil {
-			fmt.Println("==== Got error")
-			fmt.Println(err)
-		}
-	}()
+func (r Exporter) Start(ctx context.Context, host component.Host) error {
 	return nil
 }
 
-func (r Receiver) Shutdown(ctx context.Context) error {
+func (r Exporter) Shutdown(ctx context.Context) error {
+	return nil
+}
+
+func (r Exporter) Capabilities() consumer.Capabilities {
+	return consumer.Capabilities{}
+}
+
+func (r Exporter) ConsumeMetrics(ctx context.Context, pm pmetric.Metrics) error {
+	fmt.Println("data arrived.")
 	return nil
 }
