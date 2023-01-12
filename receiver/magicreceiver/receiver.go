@@ -16,6 +16,7 @@ package magicreceiver
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -23,6 +24,7 @@ import (
 	"go.opentelemetry.io/collector/consumer"
 	"go.opentelemetry.io/collector/pdata/pmetric"
 	"go.opentelemetry.io/collector/receiver"
+	"go.uber.org/multierr"
 )
 
 func NewFactory() receiver.Factory {
@@ -32,7 +34,9 @@ func NewFactory() receiver.Factory {
 		receiver.WithMetrics(createMetricsReceiver, component.StabilityLevelAlpha))
 }
 
-type Config struct{}
+type Config struct {
+	Name string `mapstructure:"name"`
+}
 
 func createDefaultConfig() component.Config {
 	return &Config{}
@@ -65,8 +69,10 @@ func (r Receiver) Start(ctx context.Context, host component.Host) error {
 		err := r.nextConsumer.ConsumeMetrics(ctx, metrics)
 
 		if err != nil {
-			fmt.Println("==== Got error")
-			fmt.Println(err)
+			for _, err := range multierr.Errors(err) {
+				json, _ := json.Marshal(err)
+				fmt.Printf("==== %s: Got error \n%s\n", r.config.Name, string(json))
+			}
 		}
 	}()
 	return nil

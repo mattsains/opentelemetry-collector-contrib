@@ -16,6 +16,7 @@ package magicexporter
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"go.opentelemetry.io/collector/component"
@@ -31,7 +32,9 @@ func NewFactory() exporter.Factory {
 		exporter.WithMetrics(createMetricsExporter, component.StabilityLevelAlpha))
 }
 
-type Config struct{}
+type Config struct {
+	Name string `mapstructure:"name"`
+}
 
 func createDefaultConfig() component.Config {
 	return &Config{}
@@ -61,6 +64,7 @@ func (r Exporter) Capabilities() consumer.Capabilities {
 }
 
 func (r Exporter) ConsumeMetrics(ctx context.Context, pm pmetric.Metrics) error {
-	fmt.Println("data arrived.")
-	return nil
+	fmt.Printf("=== %s: data arrived.\n", r.config.Name)
+
+	return errors.New(fmt.Sprintf("oops exporter %s errored", r.config.Name))
 }

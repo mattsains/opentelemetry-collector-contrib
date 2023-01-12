@@ -2,10 +2,13 @@ receivers:
   magic:
 
 exporters:
-  magic:
+  magic/a:
+    name: a
+  magic/b:
+    name: b
 
 service:
   pipelines:
     metrics:
       receivers: [magic]
-      exporters: [magic]
+      exporters: [magic/a, magic/b]
