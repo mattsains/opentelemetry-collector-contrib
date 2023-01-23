@@ -92,7 +92,8 @@ func setupRouter(nextConsumer nextConsumer) *gin.Engine {
 			Value int64  `json:"Value" binding:"required"`
 		}
 		var json struct {
-			Metrics []Metric `json:"Metrics" binding:"required"`
+			Metrics   []Metric `json:"Metrics" binding:"required"`
+			RequestId string   `json:"RequestId" binding:"required"`
 		}
 
 		if c.Bind(&json) == nil {
@@ -109,6 +110,9 @@ func setupRouter(nextConsumer nextConsumer) *gin.Engine {
 				s := metric.SetEmptySum()
 				s.DataPoints().AppendEmpty().SetIntValue(m.Value)
 			}
+
+			pm.Resource().Attributes().PutInt("Len", int64(len(json.Metrics)))
+			pm.Resource().Attributes().PutStr("RequestId", json.RequestId)
 
 			err := nextConsumer(metrics)
 

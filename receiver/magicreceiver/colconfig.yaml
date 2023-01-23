@@ -1,6 +1,10 @@
 receivers:
   magic:
 
+processors:
+  batch:
+    send_batch_size: 2
+
 exporters:
   magic:
     name: exporter
@@ -9,4 +13,5 @@ service:
   pipelines:
     metrics:
       receivers: [magic]
+      processors: [batch]
       exporters: [magic]

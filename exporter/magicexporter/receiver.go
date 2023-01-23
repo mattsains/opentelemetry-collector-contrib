@@ -63,18 +63,23 @@ func (r Exporter) Capabilities() consumer.Capabilities {
 	return consumer.Capabilities{}
 }
 
+type Metric struct {
+	Name  string `json:"Name" binding:"required"`
+	Value int64  `json:"Value" binding:"required"`
+}
+
+var pending map[string][]Metric = make(map[string][]Metric, 0)
+
 func (r Exporter) ConsumeMetrics(ctx context.Context, pm pmetric.Metrics) error {
 	fmt.Printf("=== %s: data arrived.\n", r.config.Name)
 
-	type Metric struct {
-		Name  string `json:"Name" binding:"required"`
-		Value int64  `json:"Value" binding:"required"`
-	}
-	var body struct {
-		Metrics []Metric `json:"Metrics" binding:"required"`
-	}
+	resourceMetrics := pm.ResourceMetrics().At(0)
+	reqIdAttr, _ := resourceMetrics.Resource().Attributes().Get("RequestId")
+	requestId := reqIdAttr.Str()
+	lengthAttr, _ := resourceMetrics.Resource().Attributes().Get("Len")
+	length := int(lengthAttr.Int())
 
-	metricsSlice := pm.ResourceMetrics().At(0).ScopeMetrics().At(0).Metrics()
+	metricsSlice := resourceMetrics.ScopeMetrics().At(0).Metrics()
 	for i := 0; i < metricsSlice.Len(); i++ {
 		m := metricsSlice.At(i)
 
@@ -82,11 +87,32 @@ func (r Exporter) ConsumeMetrics(ctx context.Context, pm pmetric.Metrics) error 
 			Name:  m.Name(),
 			Value: m.Sum().DataPoints().At(0).IntValue(),
 		}
-		body.Metrics = append(body.Metrics, jsonMetric)
+		val, ok := pending[requestId]
+
+		if !ok {
+			val = make([]Metric, 0)
+			pending[requestId] = val
+		}
+
+		val = append(val, jsonMetric)
+		pending[requestId] = val
 	}
 
-	jsonString, _ := json.MarshalIndent(body, "", "\t")
+	if len(pending[requestId]) == length {
+		var body struct {
+			RequestId string   `json:"RequestId" binding:"required"`
+			Metrics   []Metric `json:"Metrics" binding:"required"`
+		}
+		body.RequestId = requestId
+		body.Metrics = pending[requestId]
 
-	fmt.Println(string(jsonString))
+		jsonString, _ := json.MarshalIndent(body, "", "\t")
+
+		delete(pending, requestId)
+
+		fmt.Println(string(jsonString))
+	} else {
+		fmt.Println()
+	}
 	return nil
 }
