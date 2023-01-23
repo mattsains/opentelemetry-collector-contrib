@@ -16,15 +16,14 @@ package magicreceiver
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"time"
+	"net/http"
 
+	"github.com/gin-gonic/gin"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/consumer"
 	"go.opentelemetry.io/collector/pdata/pmetric"
 	"go.opentelemetry.io/collector/receiver"
-	"go.uber.org/multierr"
 )
 
 func NewFactory() receiver.Factory {
@@ -60,24 +59,68 @@ func createMetricsReceiver(
 	}, nil
 }
 
+type nextConsumer func(metrics pmetric.Metrics) error
+
 func (r Receiver) Start(ctx context.Context, host component.Host) error {
 	go func() {
-		time.Sleep(time.Second)
-		// emit metric
-		metrics := pmetric.NewMetrics()
+		router := setupRouter(func(m pmetric.Metrics) error {
+			return r.nextConsumer.ConsumeMetrics(ctx, m)
+		})
 
-		err := r.nextConsumer.ConsumeMetrics(ctx, metrics)
-
-		if err != nil {
-			for _, err := range multierr.Errors(err) {
-				json, _ := json.Marshal(err)
-				fmt.Printf("==== %s: Got error \n%s\n", r.config.Name, string(json))
-			}
-		}
+		router.Run(":8080")
 	}()
 	return nil
 }
 
 func (r Receiver) Shutdown(ctx context.Context) error {
 	return nil
+}
+
+func setupRouter(nextConsumer nextConsumer) *gin.Engine {
+	r := gin.Default()
+
+	// Ping test
+	r.GET("/ping", func(c *gin.Context) {
+		c.String(http.StatusOK, "pong")
+	})
+
+	r.PUT("metric", func(c *gin.Context) {
+		// Parse JSON
+
+		type Metric struct {
+			Name  string `json:"Name" binding:"required"`
+			Value int64  `json:"Value" binding:"required"`
+		}
+		var json struct {
+			Metrics []Metric `json:"Metrics" binding:"required"`
+		}
+
+		if c.Bind(&json) == nil {
+			// json variable now has data
+			// emit metric here
+			metrics := pmetric.NewMetrics()
+			pm := metrics.ResourceMetrics().AppendEmpty()
+			sm := pm.ScopeMetrics().AppendEmpty()
+
+			for _, m := range json.Metrics {
+				metric := sm.Metrics().AppendEmpty()
+				metric.SetName(m.Name)
+
+				s := metric.SetEmptySum()
+				s.DataPoints().AppendEmpty().SetIntValue(m.Value)
+			}
+
+			err := nextConsumer(metrics)
+
+			//send response
+			if err != nil {
+				fmt.Printf("==== receiver: Got error \n%s\n", err)
+				c.JSON(http.StatusInternalServerError, gin.H{"status": "fail"})
+			} else {
+				c.JSON(http.StatusOK, gin.H{"status": "ok"})
+			}
+		}
+	})
+
+	return r
 }

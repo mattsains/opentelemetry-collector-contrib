@@ -16,7 +16,7 @@ package magicexporter
 
 import (
 	"context"
-	"errors"
+	"encoding/json"
 	"fmt"
 
 	"go.opentelemetry.io/collector/component"
@@ -66,5 +66,27 @@ func (r Exporter) Capabilities() consumer.Capabilities {
 func (r Exporter) ConsumeMetrics(ctx context.Context, pm pmetric.Metrics) error {
 	fmt.Printf("=== %s: data arrived.\n", r.config.Name)
 
-	return errors.New(fmt.Sprintf("oops exporter %s errored", r.config.Name))
+	type Metric struct {
+		Name  string `json:"Name" binding:"required"`
+		Value int64  `json:"Value" binding:"required"`
+	}
+	var body struct {
+		Metrics []Metric `json:"Metrics" binding:"required"`
+	}
+
+	metricsSlice := pm.ResourceMetrics().At(0).ScopeMetrics().At(0).Metrics()
+	for i := 0; i < metricsSlice.Len(); i++ {
+		m := metricsSlice.At(i)
+
+		jsonMetric := Metric{
+			Name:  m.Name(),
+			Value: m.Sum().DataPoints().At(0).IntValue(),
+		}
+		body.Metrics = append(body.Metrics, jsonMetric)
+	}
+
+	jsonString, _ := json.MarshalIndent(body, "", "\t")
+
+	fmt.Println(string(jsonString))
+	return nil
 }
